@@ -7,7 +7,7 @@ from utils import handle_error_exception, redis_client, CRYPTO_SYMBOLS
 
 async def get_crypto_price(coin: str):
 
-    coin = CRYPTO_SYMBOLS.get(coin.upper(), coin.lower())
+    coin = CRYPTO_SYMBOLS.get(coin.upper(), coin).lower()
 
     cache_key = f"coin:{coin}"
     cached = redis_client.get(cache_key)
