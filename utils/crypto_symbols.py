@@ -1,0 +1,21 @@
+CRYPTO_SYMBOLS = {
+    "BTC": "Bitcoin",
+    "ETH": "Ethereum",
+    "USDT": "Tether",
+    "BNB": "BNB",
+    "SOL": "Solana",
+    "XRP": "XRP",
+    "DOGE": "Dogecoin",
+    "ADA": "Cardano",
+    "SHIB": "Shiba Inu",
+    "AVAX": "Avalanche",
+    "TRX": "Tron",
+    "DOT": "Polkadot",
+    "MATIC": "Polygon",
+    "LINK": "Chainlink",
+    "LTC": "Litecoin",
+    "BCH": "Bitcoin Cash",
+    "TON": "Toncoin",
+    "UNI": "Uniswap",
+    "XLM": "Stellar"
+}
