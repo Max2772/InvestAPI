@@ -135,7 +135,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+tests/TgBot/.env
 .envrc
 .venv
 env/
