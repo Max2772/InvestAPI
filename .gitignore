@@ -136,6 +136,7 @@ celerybeat.pid
 
 # Environments
 tests/TgBot/.env
+*.env
 .envrc
 .venv
 env/
