@@ -2,7 +2,9 @@ import os
 
 from sqlalchemy import Column, String, Boolean, DateTime, create_engine, BigInteger
 from datetime import datetime, UTC
-from sqlalchemy.orm import declarative_base
+
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 Base = declarative_base()
 
@@ -24,4 +26,12 @@ class User(Base):
 
 engine = create_engine(
     os.getenv("INVESTINGAPIBOT_DATABASE_URL", "sqlite:///InvestingAPIBot.db"),
-    echo=True)
+    echo=True
+)
+
+async_eninge = create_async_engine(
+    os.getenv("INVESTINGAPIBOT_DATABASE_URL", "sqlite+aiosqlite:///InvestingAPIBot.db"),
+    echo=True
+)
+
+AsyncSessionLocal = sessionmaker(bind=async_eninge, class_=AsyncSession, expire_on_commit=False) # NoQa
