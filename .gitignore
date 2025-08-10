@@ -8,6 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+requirements.in
 build/
 develop-eggs/
 dist/
@@ -135,7 +136,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-tests/TgBot/.env
+.env
 .envrc
 .venv
 env/
