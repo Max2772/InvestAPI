@@ -1,8 +1,8 @@
 import argparse
-from utils.logger import _logger, setup_logger, set_log_level
 from fastapi import FastAPI
-from models.price_response import StockResponse, CryptoResponse, SteamResponse
-from services import (get_stock_price, get_crypto_price, get_steam_item_price)
+from src.utils import (setup_logger, set_log_level)
+from src.models import (StockResponse, CryptoResponse, SteamResponse)
+from src.services import (get_stock_price, get_crypto_price, get_steam_item_price)
 
 app = FastAPI(title="Investment API",
               description="API for fetching real-time prices of stocks, cryptocurrencies, and Steam items",

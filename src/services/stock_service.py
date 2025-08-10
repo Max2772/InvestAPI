@@ -2,8 +2,8 @@ import json
 import yfinance as yf
 from datetime import datetime
 from fastapi import HTTPException
-from models.price_response import StockResponse
-from utils import handle_error_exception, redis_client
+from src.models.price_response import StockResponse
+from src.utils import handle_error_exception, redis_client
 
 async def get_stock_price(ticker: str):
 

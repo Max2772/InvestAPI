@@ -2,8 +2,8 @@ import json
 import httpx
 from datetime import datetime
 from fastapi import HTTPException
-from models.price_response import CryptoResponse
-from utils import handle_error_exception, redis_client, CRYPTO_SYMBOLS
+from src.models.price_response import CryptoResponse
+from src.utils import handle_error_exception, redis_client, CRYPTO_SYMBOLS
 
 async def get_crypto_price(coin: str):
 

@@ -2,8 +2,8 @@ import json
 import httpx
 from datetime import datetime
 from fastapi import HTTPException
-from models.price_response import SteamResponse
-from utils import handle_error_exception, redis_client
+from src.models.price_response import SteamResponse
+from src.utils import handle_error_exception, redis_client
 
 async def get_steam_item_price(app_id: int, market_hash_name: str):
 
