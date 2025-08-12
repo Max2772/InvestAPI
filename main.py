@@ -15,7 +15,7 @@ async def index():
     return {"Nothing here, look docs"}
 
 
-@app.get("/stocks/{ticker}", response_model=StockResponse, summary="Get stock price")
+@app.get("/stock/{ticker}", response_model=StockResponse, summary="Get stock price")
 async def stock_price(ticker: str):
     return await get_stock_price(ticker)
 
