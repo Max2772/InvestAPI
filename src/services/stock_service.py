@@ -1,7 +1,7 @@
 import json
 import yfinance as yf
 from datetime import datetime
-from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from src.models.price_response import StockResponse
 from src.utils import handle_error_exception, redis_client
 
@@ -17,7 +17,10 @@ async def get_stock_price(ticker: str):
         stock = yf.Ticker(ticker)
         history = stock.history(period="1d")
         if history.empty:
-            raise HTTPException(status_code=404, detail="Stock not found")
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Not Found", "detail": f"Stock {ticker} not found"}
+            )
 
         price = history["Close"].iloc[-1]
         response_data = StockResponse(name=ticker, price=round(price, 2), currency="USD", source="Yahoo Finance", cached_at=datetime.now())

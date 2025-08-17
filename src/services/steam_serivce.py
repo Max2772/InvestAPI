@@ -1,7 +1,7 @@
 import json
 import httpx
 from datetime import datetime
-from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from src.models.price_response import SteamResponse
 from src.utils import handle_error_exception, redis_client
 
@@ -22,11 +22,17 @@ async def get_steam_item_price(app_id: int, market_hash_name: str):
     except Exception as e:
         raise handle_error_exception(e, source="Steam Market API")
     if not data.get("success"):
-        raise HTTPException(status_code=404, detail=f"success == False")
+        return JSONResponse(
+            status_code=502,
+            content={"error": "Bad Gateway", "detail": "success == False"}
+        )
 
     price = data.get("lowest_price")
     if price is None:
-        raise HTTPException(status_code=404, detail="Steam item not found")
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Not Found", "detail": "Steam item not found"}
+        )
     clean_price = float(price.replace("$", ""))
 
     response_data = SteamResponse(app_id=app_id, item_name=market_hash_name, price=clean_price, currency="USD", source="Steam Market", cached_at=datetime.now())

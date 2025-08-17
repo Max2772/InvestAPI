@@ -1,7 +1,7 @@
 import json
 import httpx
 from datetime import datetime
-from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from src.models.price_response import CryptoResponse
 from src.utils import handle_error_exception, redis_client, CRYPTO_SYMBOLS
 
@@ -24,7 +24,10 @@ async def get_crypto_price(coin: str):
 
             price = data.get(coin, {}).get("usd")
             if price is None:
-                raise HTTPException(status_code=404, detail="Cryptocurrency not found")
+                return JSONResponse(
+                    status_code=404,
+                    content={"error": "Not Found", "detail": f"Cryptocurrency {coin} not found"}
+                )
 
             response_data = CryptoResponse(name=coin, price=round(price, 2), currency="USD", source="CoinGecko", cached_at=datetime.now())
             redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
