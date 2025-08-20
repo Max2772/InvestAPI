@@ -10,7 +10,6 @@ __pycache__/
 .logs
 *.logs
 .Python
-requirements.in
 build/
 develop-eggs/
 dist/
