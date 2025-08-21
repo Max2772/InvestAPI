@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-
 class StockResponse(BaseModel):
     name: str
     price: float

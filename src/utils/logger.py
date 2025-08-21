@@ -1,7 +1,6 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-
 LOG_LEVEL_MAPPING = {
     "DEBUG": logging.DEBUG,
     "INFO": logging.INFO,
