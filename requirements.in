@@ -2,5 +2,5 @@ pip-tools
 fastapi
 fastapi[standard]
 redis
-httpx
+aiohttp
 yfinance

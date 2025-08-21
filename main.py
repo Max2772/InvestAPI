@@ -15,17 +15,17 @@ async def index():
     return {"Nothing here, look docs"}
 
 
-@app.get("/stock/{ticker}", response_model=StockResponse, summary="Get stock price")
+@app.get("/stock/{ticker}", response_model=StockResponse, tags=['Stocks'], summary="Get stock price")
 async def stock_price(ticker: str):
     return await get_stock_price(ticker)
 
 
-@app.get("/crypto/{coin}", response_model=CryptoResponse, summary="Get crypto price")
+@app.get("/crypto/{coin}", response_model=CryptoResponse, tags=['Crypto'], summary="Get crypto price")
 async def crypto_price(coin: str):
     return await get_crypto_price(coin)
 
 
-@app.get("/steam/{app_id}/{market_hash_name}", response_model=SteamResponse, summary="Get steam item price")
+@app.get("/steam/{app_id}/{market_hash_name}", response_model=SteamResponse, tags=['Steam'], summary="Get steam item price")
 async def steam_price(app_id: int, market_hash_name: str):
     return await get_steam_item_price(app_id, market_hash_name)
 

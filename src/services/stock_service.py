@@ -8,23 +8,27 @@ from src.utils import handle_error_exception, redis_client
 async def get_stock_price(ticker: str):
 
     cache_key = f"stock:{ticker}"
-    cached = redis_client.get(cache_key)
+    cached = None
+
+    if redis_client is not None:
+        cached = await redis_client.get(cache_key)
 
     if cached:
         return StockResponse(**json.loads(cached))
 
     try:
-        stock = yf.Ticker(ticker)
-        history = stock.history(period="1d")
-        if history.empty:
+        stock_price = yf.Ticker(ticker).fast_info.last_price
+        if not stock_price:
             return JSONResponse(
                 status_code=404,
                 content={"error": "Not Found", "detail": f"Stock {ticker} not found"}
             )
 
-        price = history["Close"].iloc[-1]
-        response_data = StockResponse(name=ticker, price=round(price, 2), currency="USD", source="Yahoo Finance", cached_at=datetime.now())
-        redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(mode="json")))
+        response_data = StockResponse(name=ticker, price=round(stock_price, 2), currency="USD", source="Yahoo Finance", cached_at=datetime.now())
+
+        if redis_client is not None:
+            await redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(mode="json")))
+
         return response_data
     except Exception as e:
         raise handle_error_exception(e, source="Yahoo Finance API")
