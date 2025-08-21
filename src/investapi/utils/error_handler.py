@@ -1,6 +1,7 @@
 import httpx
 from fastapi import HTTPException
 
+
 def handle_error_exception(e: Exception, source: str) -> HTTPException:
     if isinstance(e, httpx.RequestError):
         return HTTPException(status_code=503, detail=f"Network error fetching price from {source}: {str(e)}")

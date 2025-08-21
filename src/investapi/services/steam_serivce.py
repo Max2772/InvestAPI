@@ -2,16 +2,23 @@ import json
 import httpx
 from datetime import datetime
 from fastapi.responses import JSONResponse
-from src.models.price_response import SteamResponse
-from src.utils import handle_error_exception, redis_client
+
+from investapi.models import SteamResponse
+from investapi.utils import handle_error_exception, redis_client
+
 
 async def get_steam_item_price(app_id: int, market_hash_name: str):
 
     cache_key = f"steam:{app_id}:{market_hash_name}"
-    cache = redis_client.get(cache_key)
+    cached = None
+    if redis_client is not None:
+        try:
+            cached = redis_client.get(cache_key)
+        except Exception as e:
+            pass
 
-    if cache:
-        return SteamResponse(**json.loads(cache))
+    if cached:
+        return SteamResponse(**json.loads(cached))
 
     try:
         url = f"https://steamcommunity.com/market/priceoverview/?appid={app_id}&market_hash_name={market_hash_name}&currency=1"
@@ -36,6 +43,10 @@ async def get_steam_item_price(app_id: int, market_hash_name: str):
     clean_price = float(price.replace("$", ""))
 
     response_data = SteamResponse(app_id=app_id, item_name=market_hash_name, price=clean_price, currency="USD", source="Steam Market", cached_at=datetime.now())
-    redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
+    if redis_client is not None:
+        try:
+            redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
+        except Exception as e:
+            pass
 
     return response_data
