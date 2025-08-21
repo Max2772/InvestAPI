@@ -42,15 +42,14 @@ class InvestAPI(FastAPI):
             content={"detail": http_exc.detail}
         )
 
-    async def stock(self, ticker: str):
+    async def stock(self, ticker: str) -> StockResponse:
         return await get_stock_price(ticker, self.RedisStorage)
 
-    async def crypto(self, coin: str):
+    async def crypto(self, coin: str) -> CryptoResponse:
         return await get_crypto_price(coin, self.RedisStorage)
 
-    async def steam(self, app_id: int, market_name: str):
+    async def steam(self, app_id: int, market_name: str) -> SteamResponse:
         return await get_steam_item_price(app_id, market_name, self.RedisStorage)
-
 
     def add_routes(self):
         @self.get("/")
@@ -58,19 +57,21 @@ class InvestAPI(FastAPI):
             return {"Nothing here, look docs"}
 
 
-        @self.get("/stock/{ticker}", response_model=StockResponse, summary="Get stock price")
+        @self.get("/stock/{ticker}", response_model=StockResponse, tags=["Stocks"], summary="Get stock price")
         async def stock_price(ticker: str):
             return await self.stock(ticker)
 
 
-        @self.get("/crypto/{coin}", response_model=CryptoResponse, summary="Get crypto price")
+        @self.get("/crypto/{coin}", response_model=CryptoResponse, tags=["Crypto"], summary="Get crypto price")
         async def crypto_price(coin: str):
             return await self.crypto(coin)
 
 
-        @self.get("/steam/{app_id}/{market_hash_name}", response_model=SteamResponse, summary="Get steam item price")
+        @self.get("/steam/{app_id}/{market_hash_name}", response_model=SteamResponse, tags=["Steam"], summary="Get steam item price")
         async def steam_price(app_id: int, market_hash_name: str):
             return await self.steam(app_id, market_hash_name)
+
+app = InvestAPI()
 
 def main():
     parser = argparse.ArgumentParser()
@@ -87,8 +88,6 @@ def main():
         set_log_level(log_level)
 
     _logger = setup_logger()
-
-    app = InvestAPI(redis=True)
 
     uvicorn.run("investapi.app:app", host=args.host, port=args.port, reload=args.reload)
 
