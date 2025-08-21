@@ -1,17 +1,17 @@
 import asyncio
 from investapi import CRYPTO_SYMBOLS, InvestAPI
 
-api = InvestAPI(redis=True)
+api = InvestAPI()
 
 async def main():
     stock_price = await api.stock('AMD')
-    print(f"get_stock_price:\n{stock_price}\n")
+    print(f"get_stock_price:\n${stock_price.price}\n")
 
     crypto_price = await api.crypto('BTC')
-    print(f"get_crypto_price:\n{crypto_price}\n")
+    print(f"get_crypto_price:\n${crypto_price.price}\n")
 
     steam_price = await api.steam(730, 'Glove Case')
-    print(f"get_steam_item_price:\n{steam_price}\n")
+    print(f"get_steam_item_price:\n${steam_price.price}\n")
 
     if 'BTC' in CRYPTO_SYMBOLS:
         print(True)
