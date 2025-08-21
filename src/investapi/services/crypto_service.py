@@ -2,20 +2,20 @@ import json
 import httpx
 from datetime import datetime
 from fastapi.responses import JSONResponse
+import redis
 
 from investapi.models import CryptoResponse
-from investapi.utils import handle_error_exception, redis_client, CRYPTO_SYMBOLS
+from investapi.utils import handle_error_exception, CRYPTO_SYMBOLS
 
 
-async def get_crypto_price(coin: str):
-
+async def get_crypto_price(coin: str, redis_client: redis.Redis | None):
     coin = CRYPTO_SYMBOLS.get(coin.upper(), coin).lower()
     cache_key = f"coin:{coin}"
 
     cached = None
     if redis_client is not None:
         try:
-            cached = redis_client.get(cache_key)
+            cached = await redis_client.get(cache_key)
         except Exception as e:
             pass
 
@@ -36,11 +36,11 @@ async def get_crypto_price(coin: str):
                     content={"error": "Not Found", "detail": f"Cryptocurrency {coin} not found"}
                 )
 
-            response_data = CryptoResponse(name=coin, price=round(price, 2), currency="USD", source="CoinGecko", cached_at=datetime.now())
+            response_data = CryptoResponse(name=coin, price=round(price, 2), currency="USD", source="CoinGecko", cached_at=datetime.now()) # type: ignore
 
             if redis_client is not None:
                 try:
-                    redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
+                    await redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
                 except Exception as e:
                     pass
 

@@ -2,18 +2,18 @@ import json
 import yfinance as yf
 from datetime import datetime
 from fastapi.responses import JSONResponse
+import redis
 
 from investapi.models import StockResponse
-from investapi.utils import handle_error_exception, redis_client
+from investapi.utils import handle_error_exception
 
 
-async def get_stock_price(ticker: str):
-
+async def get_stock_price(ticker: str, redis_client: redis.Redis | None):
     cache_key = f"stock:{ticker}"
     cached = None
     if redis_client is not None:
         try:
-            cached = redis_client.get(cache_key)
+            cached = await redis_client.get(cache_key)
         except Exception as e:
             pass
 
@@ -28,10 +28,10 @@ async def get_stock_price(ticker: str):
                 content={"error": "Not Found", "detail": f"Stock {ticker} not found"}
             )
 
-        response_data = StockResponse(name=ticker, price=round(stock_price, 2), currency="USD", source="Yahoo Finance", cached_at=datetime.now())
+        response_data = StockResponse(name=ticker, price=round(float(stock_price), 2), currency="USD", source="Yahoo Finance", cached_at=datetime.now()) # type: ignore
         if redis_client is not None:
             try:
-                redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
+                await redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
             except Exception as e:
                 pass
 

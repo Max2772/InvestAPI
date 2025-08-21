@@ -2,18 +2,19 @@ import json
 import httpx
 from datetime import datetime
 from fastapi.responses import JSONResponse
+import redis
 
 from investapi.models import SteamResponse
-from investapi.utils import handle_error_exception, redis_client
+from investapi.utils import handle_error_exception
 
 
-async def get_steam_item_price(app_id: int, market_hash_name: str):
+async def get_steam_item_price(app_id: int, market_hash_name: str, redis_client: redis.Redis | None):
 
     cache_key = f"steam:{app_id}:{market_hash_name}"
     cached = None
     if redis_client is not None:
         try:
-            cached = redis_client.get(cache_key)
+            cached = await redis_client.get(cache_key)
         except Exception as e:
             pass
 
@@ -45,7 +46,7 @@ async def get_steam_item_price(app_id: int, market_hash_name: str):
     response_data = SteamResponse(app_id=app_id, item_name=market_hash_name, price=clean_price, currency="USD", source="Steam Market", cached_at=datetime.now())
     if redis_client is not None:
         try:
-            redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
+            await redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
         except Exception as e:
             pass
 
