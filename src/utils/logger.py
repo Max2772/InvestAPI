@@ -47,9 +47,10 @@ def setup_logger():
     else:
         file_handler.setFormatter(logging.Formatter('%(asctime)s - [%(processName)-11s] %(levelname)s - '
                                                     '%(module)s.%(funcName)s:%(lineno)d - %(message)s'))
-    _logger.addHandler(file_handler)
 
+    _logger.addHandler(file_handler)
     _logger.info("Loger initialized")
+
     return _logger
 
 def get_logger():

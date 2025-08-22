@@ -1,13 +1,18 @@
 import argparse
+import asyncio
+import uvicorn
 from fastapi import FastAPI
-from src.utils import (setup_logger, set_log_level)
+
+from src.utils import (setup_logger, set_log_level, init_redis)
 from src.models import (StockResponse, CryptoResponse, SteamResponse)
 from src.services import (get_stock_price, get_crypto_price, get_steam_item_price)
 
 
-app = FastAPI(title="Investment API",
-              description="API for fetching real-time prices of stocks, cryptocurrencies, and Steam items",
-              version="1.0.0")
+app = FastAPI(
+    title='Investment API',
+    description="API for fetching real-time prices of stocks, cryptocurrencies, and Steam items",
+    version='1.0.0'
+)
 
 
 @app.get("/")
@@ -42,3 +47,6 @@ if __name__ == '__main__':
         set_log_level(log_level)
 
     _logger = setup_logger()
+    asyncio.run(init_redis())
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level='debug')
+    _logger.info('FastAPI Started')
