@@ -48,5 +48,5 @@ if __name__ == '__main__':
 
     _logger = setup_logger()
     asyncio.run(init_redis())
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level='debug')
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True, log_level='debug')
     _logger.info('FastAPI Started')
