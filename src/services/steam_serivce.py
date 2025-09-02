@@ -4,18 +4,17 @@ from datetime import datetime
 from fastapi.responses import JSONResponse
 
 from src.models.price_response import SteamResponse
-from src.utils import handle_error_exception, redis_client
+from src.utils import handle_error_exception, get_redis
 
 
 async def get_steam_item_price(app_id: int, market_hash_name: str):
     cache_key = f"steam:{app_id}:{market_hash_name}"
-    cache = None
 
-    if redis_client:
-        cache = await redis_client.get(cache_key)
-
-    if cache:
-        return SteamResponse(**json.loads(cache))
+    _redis_client = await get_redis()
+    if _redis_client:
+        cache = await _redis_client.get(cache_key)
+        if cache:
+            return SteamResponse(**json.loads(cache))
 
     try:
         url = f"https://steamcommunity.com/market/priceoverview/?appid={app_id}&market_hash_name={market_hash_name}&currency=1"
@@ -48,7 +47,7 @@ async def get_steam_item_price(app_id: int, market_hash_name: str):
         cached_at=datetime.now()
     )
 
-    if redis_client:
-        await redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
+    if _redis_client:
+        await _redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
 
     return response_data

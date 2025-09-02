@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi.responses import JSONResponse
 
 from src.models.price_response import StockResponse
-from src.utils import handle_error_exception, redis_client, get_logger
+from src.utils import handle_error_exception, get_logger, get_redis
 
 
 logger = get_logger()
@@ -12,15 +12,12 @@ logger = get_logger()
 async def get_stock_price(ticker: str):
     ticker = ticker.upper()
     cache_key = f"stock:{ticker}"
-    cached = None
 
-    if redis_client:
-        cached = await redis_client.get(cache_key)
-
-
-    if cached:
-        return StockResponse(**json.loads(cached))
-
+    _redis_client = await get_redis()
+    if _redis_client:
+        cached = await _redis_client.get(cache_key)
+        if cached:
+            return StockResponse(**json.loads(cached))
     try:
         yf_ticker = yf.Ticker(ticker)
         info = yf_ticker.info
@@ -45,8 +42,9 @@ async def get_stock_price(ticker: str):
             cached_at=datetime.now()
         )
 
-        if redis_client:
-            await redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(mode="json")))
+        if _redis_client:
+            print(f"Writing {cache_key} to Redis")
+            await _redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(mode="json")))
 
         return response_data
     except Exception as e:

@@ -14,6 +14,10 @@ app = FastAPI(
     version='1.0.0'
 )
 
+@app.on_event("startup")
+async def startup_event():
+    await init_redis()
+
 
 @app.get("/")
 async def index():
@@ -46,7 +50,7 @@ if __name__ == '__main__':
         log_level = args.log_level.upper()
         set_log_level(log_level)
 
-    _logger = setup_logger()
-    asyncio.run(init_redis())
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True, log_level='debug')
-    _logger.info('FastAPI Started')
+        _logger = setup_logger()
+        _logger.info('FastAPI Started')
+
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level='debug')

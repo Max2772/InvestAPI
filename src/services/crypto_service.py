@@ -4,18 +4,18 @@ from datetime import datetime
 from fastapi.responses import JSONResponse
 
 from src.models.price_response import CryptoResponse
-from src.utils import handle_error_exception, redis_client, CRYPTO_SYMBOLS
+from src.utils import handle_error_exception, get_redis, CRYPTO_SYMBOLS
+
 
 async def get_crypto_price(coin: str):
     coin = CRYPTO_SYMBOLS.get(coin.upper(), coin).lower()
-
     cache_key = f"coin:{coin}"
-    cached = None
-    if redis_client:
-        cached = await redis_client.get(cache_key)
 
-    if cached:
-        return CryptoResponse(**json.loads(cached))
+    _redis_client = await get_redis()
+    if _redis_client:
+        cached = await _redis_client.get(cache_key)
+        if cached:
+            return CryptoResponse(**json.loads(cached))
 
     try:
         url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin}&vs_currencies=usd"
@@ -46,8 +46,8 @@ async def get_crypto_price(coin: str):
                     cached_at=datetime.now()
                 )
 
-                if redis_client:
-                    await redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
+                if _redis_client:
+                    await _redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
 
                 return response_data
     except Exception as e:
