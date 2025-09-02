@@ -1,3 +1,4 @@
+from typing import Optional
 import logging
 from logging.handlers import RotatingFileHandler
 
@@ -11,25 +12,21 @@ LOG_LEVEL_MAPPING = {
     "CRITICAL": logging.CRITICAL,
 }
 
-LOG_LEVEL = None
 _logger = None
 
-def set_log_level(log_level: str):
-    global LOG_LEVEL
-    LOG_LEVEL = log_level if log_level in LOG_LEVEL_MAPPING else "INFO"
-
-def setup_logger():
+def setup_logger(log_level: Optional[str]) -> logging.Logger:
     global _logger
     if _logger is not None:
         return _logger
 
-    log_level = LOG_LEVEL_MAPPING.get(LOG_LEVEL, logging.INFO)
+    log_level = LOG_LEVEL_MAPPING.get(log_level, logging.INFO)
 
     _logger = logging.getLogger(__name__)
     _logger.setLevel(log_level)
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(log_level)
+
     if log_level == logging.INFO:
         console_handler.setFormatter(logging.Formatter('%(asctime)s - [%(processName)-11s] %(levelname)s - %(message)s'))
     else:
@@ -42,6 +39,7 @@ def setup_logger():
         'logs.log', maxBytes=2*1024*1024, backupCount=3, encoding="utf-8", errors="replace"
     )
     file_handler.setLevel(log_level)
+
     if log_level == logging.INFO:
         file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - [%(processName)-11s] %(message)s'))
     else:
@@ -53,9 +51,10 @@ def setup_logger():
 
     return _logger
 
-def get_logger():
+def get_logger() -> logging.Logger:
     global _logger
     if _logger is None:
         temp_logger = logging.getLogger(__name__)
         return temp_logger
+
     return _logger

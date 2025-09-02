@@ -1,18 +1,20 @@
+from typing import Union
 import json
-import aiohttp
 from datetime import datetime
+
+import aiohttp
 from fastapi.responses import JSONResponse
 
 from src.models.price_response import SteamResponse
 from src.utils import handle_error_exception, get_redis
 
 
-async def get_steam_item_price(app_id: int, market_hash_name: str):
+async def get_steam_item_price(app_id: int, market_hash_name: str) -> Union[SteamResponse, JSONResponse]:
     cache_key = f"steam:{app_id}:{market_hash_name}"
 
-    _redis_client = await get_redis()
-    if _redis_client:
-        cache = await _redis_client.get(cache_key)
+    redis_client = await get_redis()
+    if redis_client:
+        cache = await redis_client.get(cache_key)
         if cache:
             return SteamResponse(**json.loads(cache))
 
@@ -47,7 +49,7 @@ async def get_steam_item_price(app_id: int, market_hash_name: str):
         cached_at=datetime.now()
     )
 
-    if _redis_client:
-        await _redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
+    if redis_client:
+        await redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
 
     return response_data

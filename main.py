@@ -1,11 +1,11 @@
 import argparse
-import asyncio
+
 import uvicorn
 from fastapi import FastAPI
 
-from src.utils import (setup_logger, set_log_level, init_redis)
-from src.models import (StockResponse, CryptoResponse, SteamResponse)
-from src.services import (get_stock_price, get_crypto_price, get_steam_item_price)
+from src.utils import setup_logger, init_redis
+from src.models import StockResponse, CryptoResponse, SteamResponse
+from src.services import get_stock_price, get_crypto_price, get_steam_item_price
 
 
 app = FastAPI(
@@ -48,9 +48,10 @@ if __name__ == '__main__':
 
     if args.log_level:
         log_level = args.log_level.upper()
-        set_log_level(log_level)
+        logger = setup_logger(log_level)
+    else:
+        logger = setup_logger()
 
-        _logger = setup_logger()
-        _logger.info('FastAPI Started')
+    logger.info('FastAPI Started')
 
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level='debug')

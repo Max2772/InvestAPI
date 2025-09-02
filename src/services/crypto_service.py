@@ -1,19 +1,21 @@
+from typing import Union
 import json
-import aiohttp
 from datetime import datetime
+
+import aiohttp
 from fastapi.responses import JSONResponse
 
 from src.models.price_response import CryptoResponse
 from src.utils import handle_error_exception, get_redis, CRYPTO_SYMBOLS
 
 
-async def get_crypto_price(coin: str):
+async def get_crypto_price(coin: str) -> Union[CryptoResponse, JSONResponse]:
     coin = CRYPTO_SYMBOLS.get(coin.upper(), coin).lower()
     cache_key = f"coin:{coin}"
 
-    _redis_client = await get_redis()
-    if _redis_client:
-        cached = await _redis_client.get(cache_key)
+    redis_client = await get_redis()
+    if redis_client:
+        cached = await redis_client.get(cache_key)
         if cached:
             return CryptoResponse(**json.loads(cached))
 
@@ -46,8 +48,8 @@ async def get_crypto_price(coin: str):
                     cached_at=datetime.now()
                 )
 
-                if _redis_client:
-                    await _redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
+                if redis_client:
+                    await redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(), default=str))
 
                 return response_data
     except Exception as e:

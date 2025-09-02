@@ -1,6 +1,8 @@
+from typing import Union
 import json
-import yfinance as yf
 from datetime import datetime
+
+import yfinance as yf
 from fastapi.responses import JSONResponse
 
 from src.models.price_response import StockResponse
@@ -9,13 +11,13 @@ from src.utils import handle_error_exception, get_logger, get_redis
 
 logger = get_logger()
 
-async def get_stock_price(ticker: str):
+async def get_stock_price(ticker: str) -> Union[StockResponse, JSONResponse]:
     ticker = ticker.upper()
     cache_key = f"stock:{ticker}"
 
-    _redis_client = await get_redis()
-    if _redis_client:
-        cached = await _redis_client.get(cache_key)
+    redis_client = await get_redis()
+    if redis_client:
+        cached = await redis_client.get(cache_key)
         if cached:
             return StockResponse(**json.loads(cached))
     try:
@@ -42,9 +44,9 @@ async def get_stock_price(ticker: str):
             cached_at=datetime.now()
         )
 
-        if _redis_client:
+        if redis_client:
             print(f"Writing {cache_key} to Redis")
-            await _redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(mode="json")))
+            await redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(mode="json")))
 
         return response_data
     except Exception as e:
