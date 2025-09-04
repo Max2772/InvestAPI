@@ -1,6 +1,7 @@
 from typing import Union
 import json
 from datetime import datetime
+from urllib import quote
 
 import aiohttp
 from fastapi.responses import JSONResponse
@@ -19,7 +20,7 @@ async def get_steam_item_price(app_id: int, market_hash_name: str) -> Union[Stea
             return SteamResponse(**json.loads(cache))
 
     try:
-        url = f"https://steamcommunity.com/market/priceoverview/?appid={app_id}&market_hash_name={market_hash_name}&currency=1"
+        url = f"https://steamcommunity.com/market/priceoverview/?appid={app_id}&market_hash_name={quote(market_hash_name)}&currency=1"
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 response.raise_for_status()
@@ -42,7 +43,7 @@ async def get_steam_item_price(app_id: int, market_hash_name: str) -> Union[Stea
     clean_price = float(price.replace("$", ""))
     response_data = SteamResponse(
         app_id=app_id,
-        item_name=market_hash_name,
+        market_name=market_hash_name,
         price=clean_price,
         currency="USD",
         source="Steam Market",

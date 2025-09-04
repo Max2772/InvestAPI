@@ -2,24 +2,19 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-class StockResponse(BaseModel):
-    name: str
+
+class BaseAssetResponse(BaseModel):
     price: float
     currency: str
     source: str
     cached_at: datetime
 
-class CryptoResponse(BaseModel):
+class StockResponse(BaseAssetResponse):
     name: str
-    price: float
-    currency: str
-    source: str
-    cached_at: datetime
 
-class SteamResponse(BaseModel):
+class CryptoResponse(BaseAssetResponse):
+    name: str
+
+class SteamResponse(BaseAssetResponse):
     app_id: int
-    item_name: str
-    price: float
-    currency: str
-    source: str
-    cached_at: datetime
+    market_name: str
