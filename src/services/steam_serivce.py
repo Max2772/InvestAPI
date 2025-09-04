@@ -1,7 +1,7 @@
 from typing import Union
 import json
 from datetime import datetime
-from urllib import quote
+from urllib.parse import quote
 
 import aiohttp
 from fastapi.responses import JSONResponse
