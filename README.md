@@ -53,11 +53,14 @@ The project was created as a unified interface for the Telegram bot `@InvestingA
    pip install -r requirements.txt
    ```
 3. Ensure Redis is installed and running.
+
+
 4. Start the API:
    ```bash
    uvicorn main:app --reload
    ```
    or
+
    ```bash
    fastapi dev main.py
    ```
@@ -75,7 +78,13 @@ InvestAPI provides three main endpoints. Interactive documentation is available 
    ```
    Response:
    ```json
-   {"name":"MSFT","price":507.43,"currency":"USD","source":"Yahoo Finance","cached_at":"2025-08-22T19:15:48.553922"}
+   {
+     "name": "MSFT",
+     "price": 507.43,
+     "currency": "USD",
+     "source": "Yahoo Finance",
+     "cached_at": "2025-08-22T19:15:48.553922"
+   }
    ```
 
 2. **Cryptocurrency**:
@@ -84,7 +93,13 @@ InvestAPI provides three main endpoints. Interactive documentation is available 
    ```
    Response:
    ```json
-   {"name":"solana","price":196.99,"currency":"USD","source":"CoinGecko","cached_at":"2025-08-22T19:16:40.148279"}
+   {
+     "name": "solana",
+     "price": 196.99,
+     "currency": "USD",
+     "source": "CoinGecko",
+     "cached_at": "2025-08-22T19:16:40.148279"
+   }
    ```
 
 3. **Steam Items**:
@@ -93,7 +108,14 @@ InvestAPI provides three main endpoints. Interactive documentation is available 
    ```
    Response:
    ```json
-   {"app_id":730,"item_name":"Danger Zone Case","price":2.38,"currency":"USD","source":"Steam Market","cached_at":"2025-08-22T19:17:00.696130"}
+   {
+     "app_id": 730,
+     "item_name": "Danger Zone Case",
+     "price": 2.38,
+     "currency": "USD",
+     "source": "Steam Market",
+     "cached_at": "2025-08-22T19:17:00.696130"
+   }
    ```
 
 ### Example in Python
@@ -118,7 +140,10 @@ print(f"AMD price: {price}")
 ### Error Handling
 If an asset is not found, the API returns a 404 error:
 ```json
-{"error":"Not Found","detail":"Stock APPL not found"}
+{
+   "error": "Not Found",
+   "detail": "Stock APPL not found"
+}
 ```
 
 ### Rate Limits
@@ -172,7 +197,7 @@ services:
 2. The API checks Redis for cached data.
 3. If cached, the data is returned immediately.
 4. If not cached, the API fetches data from an external source (Yahoo Finance, CoinGecko, or Steam Market) using `aiohttp`.
-5. The fetched data is cached in Redis for 900 seconds and returned to the user.
+5. The fetched data is cached in Redis for 900 seconds (Can be modified) and returned to the user.
 
 The API can function without Redis, but caching significantly improves performance.
 
