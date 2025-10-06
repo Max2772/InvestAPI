@@ -19,9 +19,9 @@ async def startup_event():
     await init_redis()
 
 
-@app.get("/")
+@app.get('/', tags=['Index'])
 async def index():
-    return {"Nothing here, look docs"}
+    return {'Nothing here, look docs'}
 
 
 @app.get("/stock/{ticker}", response_model=StockResponse, tags=['Stocks'], summary="Get stock price")
