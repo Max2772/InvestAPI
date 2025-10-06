@@ -10,7 +10,7 @@ API for fetching real-time prices of stocks, ETFs, cryptocurrencies, and Steam i
 
 InvestAPI is a high-performance API built with [FastAPI](https://fastapi.tiangolo.com/) that provides up-to-date prices for stocks, ETFs, cryptocurrencies, and Steam items. It leverages Redis for caching to ensure lightning-fast responses ⚡.
 
-The project was created as a unified interface for the Telegram bot `@InvestingAPIBot` to fetch and cache price data, particularly for Steam items, which are hard to source elsewhere. It can also be used for other services, such as websites or investment applications.
+The project was created as a unified interface for the Telegram bot [@InvestingAPIBot](https://github.com/Max2772/InvestingAPIBot) to fetch and cache price data, particularly for Steam items, which are hard to source elsewhere. It can also be used for other services, such as websites or investment applications.
 
 **Key Features:**
 - 📊 Stock and ETF prices via `/stock/{ticker}` (data from [Yahoo Finance](https://finance.yahoo.com/)).
