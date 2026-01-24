@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com)
 
-InvestAPI is a high-performance API built with [FastAPI](https://fastapi.tiangolo.com/) that provides up-to-date prices for stocks, ETFs, cryptocurrencies and Steam Market items. It leverages Redis for caching to ensure lightning-fast responses ⚡.
+InvestAPI is a high-performance API built with [FastAPI](https://fastapi.tiangolo.com/) and [Redis](https://redis.io/) that provides up-to-date prices for stocks, ETFs, cryptocurrencies and Steam Market items. It leverages Redis for caching to ensure lightning-fast responses ⚡.
 
 The project was created as a unified interface for the Telegram bot [@InvestingAPIBot](https://github.com/Max2772/InvestingAPIBot) to fetch and cache price data for various asset types, which are hard to source elsewhere. It can also be used for other services, such as websites or investment applications.
 
