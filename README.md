@@ -1,6 +1,6 @@
 # InvestAPI 📈
 
-![version](https://img.shields.io/badge/version-1.0.1-blue)
+![version](https://img.shields.io/badge/version-1.1.0-blue)
 [![Python Version](https://img.shields.io/badge/python-3.10--3.13-blue)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com)
