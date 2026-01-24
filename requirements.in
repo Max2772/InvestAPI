@@ -1,6 +1,0 @@
-pip-tools
-fastapi
-fastapi[standard]
-redis
-aiohttp
-yfinance

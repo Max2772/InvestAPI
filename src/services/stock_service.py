@@ -1,26 +1,29 @@
 from typing import Union
-import json
 from datetime import datetime
 
 import yfinance as yf
 from fastapi.responses import JSONResponse
 
-from src.models.price_response import StockResponse
-from src.utils import handle_error_exception, get_logger, get_redis
+from src.logger import logger
+from src.models.asset_responses import StockResponse
+from src.utils import handle_error_exception
+from src.utils.redis_client import RedisClient
 
 
-logger = get_logger()
-
-async def get_stock_price(ticker: str) -> Union[StockResponse, JSONResponse]:
+async def get_stock_price(
+        ticker: str,
+        redis_client: RedisClient
+) -> Union[StockResponse, JSONResponse]:
     ticker = ticker.upper()
     cache_key = f"stock:{ticker}"
 
-    redis_client = await get_redis()
     if redis_client:
-        cached = await redis_client.get(cache_key)
-        if cached:
-            return StockResponse(**json.loads(cached))
+        cache = await redis_client.get_cache(cache_key)
+        if cache:
+            return cache
+
     try:
+        logger.info(f"Fetching stock data for {ticker} from Yahoo Finance")
         yf_ticker = yf.Ticker(ticker)
         info = yf_ticker.info
         if not info or 'symbol' not in info:
@@ -30,7 +33,8 @@ async def get_stock_price(ticker: str) -> Union[StockResponse, JSONResponse]:
             )
 
         stock_price = yf_ticker.fast_info.last_price
-        if not stock_price:
+        company_name = info.get('shortName')
+        if not stock_price or not company_name:
             return JSONResponse(
                 status_code=404,
                 content={"error": "Not Found", "detail": f"Stock {ticker} not found"}
@@ -38,6 +42,7 @@ async def get_stock_price(ticker: str) -> Union[StockResponse, JSONResponse]:
 
         response_data = StockResponse(
             name=ticker,
+            full_name=company_name,
             price=round(stock_price, 2),
             currency="USD",
             source="Yahoo Finance",
@@ -45,9 +50,9 @@ async def get_stock_price(ticker: str) -> Union[StockResponse, JSONResponse]:
         )
 
         if redis_client:
-            print(f"Writing {cache_key} to Redis")
-            await redis_client.setex(cache_key, 900, json.dumps(response_data.model_dump(mode="json")))
+            await redis_client.set_cache(cache_key, response_data)
 
         return response_data
     except Exception as e:
+        logger.error(f"Error fetching stock {ticker}: {e}")
         raise handle_error_exception(e, source="Yahoo Finance API")
