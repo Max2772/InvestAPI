@@ -3,7 +3,6 @@
 ---
 
 ### 🆕 v1.1.0
-### 🆕 v1.1.0
 
 #### ✨ New Features:
 * Added `full_name` field to the `StockResponse` model, providing the full company name for stocks and ETFs fetched from Yahoo Finance.
