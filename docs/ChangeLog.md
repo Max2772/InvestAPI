@@ -6,6 +6,7 @@
 #### 🛠 Improvements:
 * Renamed the name of services in `docker-compose.yaml` to `investapi-api` and `investapi-redis` to be more unique and prevent docker conflicts.
 
+---
 
 ### 🆕 v1.1.0
 
