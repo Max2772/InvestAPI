@@ -1,5 +1,5 @@
 services:
-  api:
+  investapi-api:
     build:
       context: ..
       dockerfile: docker/Dockerfile
@@ -12,10 +12,10 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
-      - redis
+      - investapi-redis
     restart: unless-stopped
 
-  redis:
+  investapi-redis:
     image: redis:alpine
     container_name: investapi_redis
     restart: unless-stopped
