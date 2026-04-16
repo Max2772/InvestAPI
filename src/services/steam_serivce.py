@@ -47,7 +47,7 @@ async def get_steam_item_price(
         clean_price = float(price.replace("$", ""))
         response_data = SteamResponse(
             app_id=app_id,
-            market_name=market_hash_name,
+            name=market_hash_name,
             price=clean_price,
             currency="USD",
             source="Steam Market",

@@ -20,9 +20,9 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 
 ## [📦 Full Changelog](docs/ChangeLog.md)
 
-### 🆕 v1.1.1
-#### 🛠 Improvements:
-* Renamed the name of services in `docker-compose.yaml` to `investapi-api` and `investapi-redis` to be more unique and prevent docker conflicts.
+### 🆕 v1.1.2
+#### 🐛 Bug Fixes:
+* Renamed `market_name` to `name` in `SteamResponse` for consistency across all response models. This fixes compatibility issues and standardizes asset naming.
 
 ---
 
@@ -128,7 +128,7 @@ InvestAPI provides three main endpoints. Interactive documentation is available 
    "source":"Steam Market",
    "cached_at":"2026-01-15T14:58:31.688942",
    "app_id":730,
-   "market_name":"Danger Zone Case"
+   "name":"Danger Zone Case"
    }
    ```
 

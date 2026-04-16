@@ -2,6 +2,12 @@
 
 ---
 
+### 🆕 v1.1.2
+#### 🐛 Bug Fixes:
+* Renamed `market_name` to `name` in `SteamResponse` for consistency across all response models. This fixes compatibility issues and standardizes asset naming.
+
+---
+
 ### 🆕 v1.1.1
 #### 🛠 Improvements:
 * Renamed the name of services in `docker-compose.yaml` to `investapi-api` and `investapi-redis` to be more unique and prevent docker conflicts.

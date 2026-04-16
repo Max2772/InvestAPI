@@ -21,4 +21,4 @@ class CryptoResponse(BaseAssetResponse):
 class SteamResponse(BaseAssetResponse):
     asset_type: AssetType = AssetType.STEAM
     app_id: int
-    market_name: str
+    name: str

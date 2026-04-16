@@ -63,4 +63,4 @@ async def test_steam(client):
     assert isinstance(steam.source, str)
     assert isinstance(steam.cached_at, datetime)
     assert steam.app_id == 730
-    assert steam.market_name == 'Glove Case'
+    assert steam.name == 'Glove Case'
