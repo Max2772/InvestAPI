@@ -22,9 +22,10 @@ async def client():
 
 @pytest.mark.asyncio
 async def test_index(client):
-    response = await client.get("/")
-    assert response.status_code == 200
-    assert response.json() == ["Nothing here, look docs"]
+    response = await client.get("/", follow_redirects=False)
+
+    assert response.status_code in (301, 302, 307, 308)
+    assert response.headers["location"] == "/docs"
 
 
 @pytest.mark.asyncio

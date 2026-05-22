@@ -4,13 +4,8 @@ from typing import Union
 import redis.asyncio as aioredis
 
 from app.config import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, logger
-from app.models import AssetType, TTL_BY_ASSET_TYPE
-from app.schemas import (
-    RESPONSE_BY_ASSET_TYPE,
-    StockResponse,
-    CryptoResponse,
-    SteamResponse,
-)
+from app.models import AssetType, TTL_BY_ASSET_TYPE, RESPONSE_BY_ASSET_TYPE
+from app.schemas.asset_responses import BaseAssetResponse
 
 
 class RedisClient:
@@ -41,7 +36,7 @@ class RedisClient:
     async def get_cache(
         self,
         cache_key: str,
-    ) -> Union[StockResponse, CryptoResponse, SteamResponse, None]:
+    ) -> Union[BaseAssetResponse, None]:
         try:
             cache = await self._client.get(cache_key)
             if not cache:
@@ -70,7 +65,7 @@ class RedisClient:
     async def set_cache(
         self,
         cache_key: str,
-        response: Union[StockResponse, CryptoResponse, SteamResponse],
+        response: Union[BaseAssetResponse],
     ) -> None:
         try:
             payload = {
@@ -83,6 +78,6 @@ class RedisClient:
                 await self._client.setex(cache_key, ttl, json.dumps(payload))
                 logger.info(f"{cache_key} cache set for {ttl} seconds")
             else:
-                logger.warning(f"{cache_key} not cached because TTL={ttl}")
+                logger.warning(f"{cache_key} not cached. TTL must be greater than 0")
         except Exception as e:
             logger.error(f"Error while setting {cache_key} cache: {e}")
