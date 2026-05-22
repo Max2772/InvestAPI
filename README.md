@@ -38,7 +38,8 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 ## Installation 🛠️
 
 ### Requirements
-- Python 3.10–3.13 (3.11 recommended for optimal compatibility with dependencies).
+- Python 3.11+ (see `requires-python` in `pyproject.toml`).
+- [uv](https://docs.astral.sh/uv/) — dependency and environment manager.
 - Redis (installed via Docker or manually).
 - Docker (optional, for running with `docker-compose`).
 - OS: Tested on Windows; Linux support to be added later.
@@ -62,26 +63,25 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
    git clone https://github.com/Max2772/InvestAPI.git
    cd InvestAPI
    ```
-2. Set up a virtual environment and install dependencies. For production use (core dependencies) use `/requirements/prod`:
+2. Install dependencies with [uv](https://docs.astral.sh/uv/):
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements/prod/requirements.txt
+   uv sync
    ```
-   For development (includes testing tools like `pytest`), use `/requirements/dev`:
+   Production only (no dev tools such as `pytest`):
    ```bash
-   pip install -r requirements/dev/requirements.txt
+   uv sync --no-dev
    ```
+   `uv sync` reads `pyproject.toml` and `uv.lock`, creates a virtual environment, and installs pinned packages.
 3. Ensure Redis is installed and running.
 
 4. Start the API:
    ```bash
-   uvicorn app.main:app --reload
+   uv run uvicorn app.main:app --reload
    ```
    or
 
    ```bash
-   fastapi dev app/main.py
+   uv run fastapi dev app/main.py
    ```
 5. The API will be available at `http://localhost:8000`.
 
@@ -253,7 +253,7 @@ app/
 3. **Database** — `RedisClient` get/set cache.
 4. **Schema** — `StockResponse` returned to the client.
 
-Run: `uvicorn app.main:app --reload`
+Run: `uv run uvicorn app.main:app --reload`
 
 The API can function without Redis, but caching significantly improves performance.
 
