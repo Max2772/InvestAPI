@@ -3,6 +3,12 @@ from fastapi import HTTPException
 
 
 def handle_error_exception(e: Exception, source: str) -> HTTPException:
+    if isinstance(e, (aiohttp.ClientTimeout, aiohttp.ServerTimeoutError)):
+        return HTTPException(
+            status_code=504,
+            detail=f"Timeout while fetching from {source}: {e}",
+        )
+
     if isinstance(e, aiohttp.ClientConnectionError):
         return HTTPException(
             status_code=503,
@@ -12,12 +18,6 @@ def handle_error_exception(e: Exception, source: str) -> HTTPException:
     if isinstance(e, aiohttp.ClientResponseError):
         status_code = e.status if hasattr(e, "status") else 502
         return HTTPException(status_code=status_code, detail=f"{source} HTTP error: {e}")
-
-    if isinstance(e, aiohttp.ClientTimeout):
-        return HTTPException(
-            status_code=504,
-            detail=f"Timeout while fetching from {source}: {e}",
-        )
 
     if isinstance(e, ValueError):
         return HTTPException(

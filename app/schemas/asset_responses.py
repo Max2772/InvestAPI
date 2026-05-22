@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.models import AssetType
+from app.types.enums.enums import AssetType
 
 
 class BaseAssetResponse(BaseModel):

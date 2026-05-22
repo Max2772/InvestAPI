@@ -1,20 +1,19 @@
 from datetime import datetime
-from typing import Union
 
 import aiohttp
-from fastapi.responses import JSONResponse
 
-from app.config import logger
 from app.database import RedisClient
 from app.schemas import CryptoResponse
-from app.constants import CRYPTO_SYMBOLS
-from app.utils import handle_error_exception
+from app.types.constants import CRYPTO_SYMBOLS
+from app.utils import AssetNotFoundError, handle_error_exception
+from app.utils.logging import logger
 
 
 async def get_crypto_price(
     coin: str,
     redis_client: RedisClient | None,
-) -> Union[CryptoResponse, JSONResponse]:
+    http_session: aiohttp.ClientSession,
+) -> CryptoResponse:
     coin = CRYPTO_SYMBOLS.get(coin.upper(), coin).lower()
     cache_key = f"coin:{coin}"
 
@@ -27,27 +26,17 @@ async def get_crypto_price(
         logger.info(f"Fetching coin data for {coin} from CoinGecko API")
         url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin}&vs_currencies=usd"
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                data = await response.json()
-                response.raise_for_status()
+        async with http_session.get(url) as response:
+            data = await response.json()
+            response.raise_for_status()
 
         coin_data = data.get(coin)
         if not coin_data or "usd" not in coin_data:
-            return JSONResponse(
-                status_code=404,
-                content={"error": "Not Found", "detail": f"Cryptocurrency {coin} not found"},
-            )
+            raise AssetNotFoundError(f"Cryptocurrency {coin} not found")
 
         price = coin_data.get("usd")
         if price is None or not isinstance(price, (int, float)):
-            return JSONResponse(
-                status_code=404,
-                content={
-                    "error": "Not Found",
-                    "detail": f"Price for cryptocurrency {coin} not available",
-                },
-            )
+            raise AssetNotFoundError(f"Price for cryptocurrency {coin} not available")
 
         response_data = CryptoResponse(
             name=coin,
@@ -61,6 +50,8 @@ async def get_crypto_price(
             await redis_client.set_cache(cache_key, response_data)
 
         return response_data
+    except AssetNotFoundError:
+        raise
     except Exception as e:
         logger.error(f"Error fetching crypto {coin}: {e}")
         raise handle_error_exception(e, source="CoinGecko API") from e

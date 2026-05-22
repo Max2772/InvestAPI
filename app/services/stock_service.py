@@ -1,19 +1,17 @@
 from datetime import datetime
-from typing import Union
 
 import yfinance as yf
-from fastapi.responses import JSONResponse
 
-from app.config import logger
 from app.database import RedisClient
 from app.schemas import StockResponse
-from app.utils import handle_error_exception
+from app.utils import AssetNotFoundError, handle_error_exception
+from app.utils.logging import logger
 
 
 async def get_stock_price(
     ticker: str,
     redis_client: RedisClient | None,
-) -> Union[StockResponse, JSONResponse]:
+) -> StockResponse:
     ticker = ticker.upper()
     cache_key = f"stock:{ticker}"
 
@@ -27,18 +25,12 @@ async def get_stock_price(
         yf_ticker = yf.Ticker(ticker)
         info = yf_ticker.info
         if not info or "symbol" not in info:
-            return JSONResponse(
-                status_code=404,
-                content={"error": "Not Found", "detail": f"Stock {ticker} not found"},
-            )
+            raise AssetNotFoundError(f"Stock {ticker} not found")
 
         stock_price = yf_ticker.fast_info.last_price
         company_name = info.get("shortName")
         if not stock_price or not company_name:
-            return JSONResponse(
-                status_code=404,
-                content={"error": "Not Found", "detail": f"Stock {ticker} not found"},
-            )
+            raise AssetNotFoundError(f"Stock {ticker} not found")
 
         response_data = StockResponse(
             name=ticker,
@@ -53,6 +45,8 @@ async def get_stock_price(
             await redis_client.set_cache(cache_key, response_data)
 
         return response_data
+    except AssetNotFoundError:
+        raise
     except Exception as e:
         logger.error(f"Error fetching stock {ticker}: {e}")
         raise handle_error_exception(e, source="Yahoo Finance API") from e

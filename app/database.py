@@ -3,8 +3,10 @@ from typing import Union
 
 import redis.asyncio as aioredis
 
-from app.config import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, logger
-from app.models import AssetType, TTL_BY_ASSET_TYPE
+from app.config import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_STOCK_INTERVAL, REDIS_CRYPTO_INTERVAL, \
+    REDIS_STEAM_INTERVAL
+from app.utils.logging import logger
+from app.types.enums.enums import AssetType
 from app.schemas import RESPONSE_BY_ASSET_TYPE
 from app.schemas.asset_responses import BaseAssetResponse
 
@@ -82,3 +84,10 @@ class RedisClient:
                 logger.warning(f"{cache_key} not cached. TTL must be greater than 0")
         except Exception as e:
             logger.error(f"Error while setting {cache_key} cache: {e}")
+
+
+TTL_BY_ASSET_TYPE: dict[AssetType, int] = {
+    AssetType.STOCK: REDIS_STOCK_INTERVAL,
+    AssetType.CRYPTO: REDIS_CRYPTO_INTERVAL,
+    AssetType.STEAM: REDIS_STEAM_INTERVAL,
+}

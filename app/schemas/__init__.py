@@ -1,4 +1,4 @@
-from app.models import AssetType
+from app.types.enums.enums import AssetType
 from app.schemas.asset_responses import (
     BaseAssetResponse,
     StockResponse,

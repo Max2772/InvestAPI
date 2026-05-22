@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from starlette.responses import RedirectResponse
 
-from app.routers.dependencies import RedisDep
+from app.routers.dependencies import HttpSessionDep, RedisDep
 from app.schemas import StockResponse, CryptoResponse, SteamResponse
 from app.services import get_stock_price, get_crypto_price, get_steam_item_price
 
@@ -29,8 +29,12 @@ async def stock_price(ticker: str, redis_client: RedisDep):
     tags=["Crypto"],
     summary="Get crypto price",
 )
-async def crypto_price(coin: str, redis_client: RedisDep):
-    return await get_crypto_price(coin, redis_client)
+async def crypto_price(
+        coin: str,
+        redis_client: RedisDep,
+        http_session: HttpSessionDep
+):
+    return await get_crypto_price(coin, redis_client, http_session)
 
 
 @router.get(
@@ -39,5 +43,10 @@ async def crypto_price(coin: str, redis_client: RedisDep):
     tags=["Steam"],
     summary="Get steam item price",
 )
-async def steam_price(app_id: int, market_hash_name: str, redis_client: RedisDep):
-    return await get_steam_item_price(app_id, market_hash_name, redis_client)
+async def steam_price(
+    app_id: int,
+    market_hash_name: str,
+    redis_client: RedisDep,
+    http_session: HttpSessionDep,
+):
+    return await get_steam_item_price(app_id, market_hash_name, redis_client, http_session)

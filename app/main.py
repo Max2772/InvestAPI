@@ -1,11 +1,15 @@
 from contextlib import asynccontextmanager
 
+import aiohttp
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
-from app.config import API_HOST, API_PORT, API_RELOAD, LOG_LEVEL, logger
+from app.config import API_HOST, API_PORT, API_RELOAD, LOG_LEVEL
 from app.database import RedisClient
 from app.routers import router
+from app.utils.exceptions import AssetNotFoundError, ExternalServiceError
+from app.utils.logging import logger
 
 
 @asynccontextmanager
@@ -21,7 +25,11 @@ async def lifespan(app: FastAPI):
         logger.error(f"Critical error during Redis startup: {e}")
         app.state.redis_client = None
 
+    app.state.http_session = aiohttp.ClientSession()
+
     yield
+
+    await app.state.http_session.close()
 
     if app.state.redis_client:
         try:
@@ -41,6 +49,26 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     application.include_router(router)
+
+    @application.exception_handler(AssetNotFoundError)
+    async def asset_not_found_handler(
+        _request: Request, ex: AssetNotFoundError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Not Found", "detail": ex.detail},
+        )
+
+    @application.exception_handler(ExternalServiceError)
+    async def external_service_handler(
+        _request: Request, ex: ExternalServiceError
+    ) -> JSONResponse:
+        error_label = "Bad Gateway" if ex.status_code == 502 else "External Service Error"
+        return JSONResponse(
+            status_code=ex.status_code,
+            content={"error": error_label, "detail": ex.detail},
+        )
+
     return application
 
 
