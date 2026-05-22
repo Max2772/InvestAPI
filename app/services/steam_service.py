@@ -43,14 +43,17 @@ async def get_steam_item_price(
                 content={"error": "Bad Gateway", "detail": "success == False"},
             )
 
-        price = data.get("lowest_price")
-        if price is None:
+        lowest_price = data.get("lowest_price")
+        median_price = data.get("median_price")
+        if lowest_price is None and median_price is None:
             return JSONResponse(
                 status_code=404,
                 content={"error": "Not Found", "detail": "Steam item price not found"},
             )
 
+        price = lowest_price if lowest_price else median_price
         clean_price = float(price.replace("$", ""))
+
         response_data = SteamResponse(
             app_id=app_id,
             name=market_hash_name,
