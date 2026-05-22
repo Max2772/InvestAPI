@@ -2,6 +2,20 @@
 
 ---
 
+### 🆕 v1.2.0
+#### 🛠 Improvements:
+* Refactored to **Layered Architecture** under `app/`:
+  - `routers/` — HTTP endpoints and DI
+  - `schemas/` — Pydantic response models
+  - `services/` — business logic
+  - `models.py` — `AssetType` enum and cache TTL
+  - `database.py` — Redis client
+  - `config.py` — environment settings and logging
+  - `main.py` — FastAPI application
+* Removed legacy `src/` package. Single entry point: `app/main.py`.
+
+---
+
 ### 🆕 v1.1.2
 #### 🐛 Bug Fixes:
 * Renamed `market_name` to `name` in `SteamResponse` for consistency across all response models. This fixes compatibility issues and standardizes asset naming.

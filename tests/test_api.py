@@ -4,9 +4,10 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 
-from main import app
-from src.models.asset_responses import StockResponse, CryptoResponse, SteamResponse
-from src.types import AssetType
+from app.main import app
+from app.models import AssetType
+from app.schemas import StockResponse, CryptoResponse, SteamResponse
+
 
 @pytest_asyncio.fixture
 async def client():
@@ -14,19 +15,21 @@ async def client():
 
     async with AsyncClient(
         transport=ASGITransport(app=app),
-        base_url='http://test'
+        base_url="http://test",
     ) as ac:
         yield ac
 
+
 @pytest.mark.asyncio
 async def test_index(client):
-    response = await client.get('/')
+    response = await client.get("/")
     assert response.status_code == 200
-    assert response.json() == ['Nothing here, look docs']
+    assert response.json() == ["Nothing here, look docs"]
+
 
 @pytest.mark.asyncio
 async def test_stock(client):
-    response = await client.get('/stock/AMD')
+    response = await client.get("/stock/AMD")
     assert response.status_code == 200
 
     stock: StockResponse = StockResponse.model_validate(response.json())
@@ -36,11 +39,12 @@ async def test_stock(client):
     assert isinstance(stock.source, str)
     assert isinstance(stock.cached_at, datetime)
     assert isinstance(stock.full_name, str)
-    assert stock.name == 'AMD'
+    assert stock.name == "AMD"
+
 
 @pytest.mark.asyncio
 async def test_crypto(client):
-    response = await client.get('/crypto/solana')
+    response = await client.get("/crypto/solana")
     assert response.status_code == 200
 
     crypto: CryptoResponse = CryptoResponse.model_validate(response.json())
@@ -49,11 +53,12 @@ async def test_crypto(client):
     assert isinstance(crypto.currency, str)
     assert isinstance(crypto.source, str)
     assert isinstance(crypto.cached_at, datetime)
-    assert crypto.name == 'solana'
+    assert crypto.name == "solana"
+
 
 @pytest.mark.asyncio
 async def test_steam(client):
-    response = await client.get('/steam/730/Glove Case')
+    response = await client.get("/steam/730/Glove Case")
     assert response.status_code == 200
 
     steam: SteamResponse = SteamResponse.model_validate(response.json())
@@ -63,4 +68,4 @@ async def test_steam(client):
     assert isinstance(steam.source, str)
     assert isinstance(steam.cached_at, datetime)
     assert steam.app_id == 730
-    assert steam.name == 'Glove Case'
+    assert steam.name == "Glove Case"

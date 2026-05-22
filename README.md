@@ -67,12 +67,12 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 
 4. Start the API:
    ```bash
-   uvicorn main:app --reload
+   uvicorn app.main:app --reload
    ```
    or
 
    ```bash
-   fastapi dev main.py
+   fastapi dev app/main.py
    ```
 5. The API will be available at `http://localhost:8000`.
 
@@ -222,12 +222,27 @@ services:
 - `redis` — for Redis integration.
 - For testing (development only): `pytest`, `pytest-asyncio`, `httpx` — for running API endpoint tests.
 
-### Architecture
-1. A user sends a request (e.g., `/stock/AMD`).
-2. The API checks Redis for cached data via `RedisClient` class.
-3. If cached, the data is returned immediately.
-4. If not cached, the API fetches data from an external source (Yahoo Finance, CoinGecko, or Steam Market) using `aiohttp`.
-5. The fetched data is cached in Redis for the set amount of seconds (from `.env`) and returned to the user.
+### Architecture (Layered)
+
+```
+app/
+├── routers/       # HTTP routes and dependencies
+├── schemas/       # Pydantic API models
+├── services/      # Business logic (fetch prices, cache orchestration)
+├── models.py      # Domain enums and cache TTL (ORM-ready)
+├── database.py    # Redis client (persistence layer)
+├── config.py      # Settings and logging
+└── main.py        # FastAPI app entry point
+```
+
+**Request flow** (`GET /stock/AMD`):
+
+1. **Router** — validates input, injects Redis via `RedisDep`.
+2. **Service** — checks cache, calls Yahoo Finance if needed, stores result.
+3. **Database** — `RedisClient` get/set cache.
+4. **Schema** — `StockResponse` returned to the client.
+
+Run: `uvicorn app.main:app --reload`
 
 The API can function without Redis, but caching significantly improves performance.
 

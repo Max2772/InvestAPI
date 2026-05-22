@@ -5,16 +5,16 @@ from urllib.parse import quote
 import aiohttp
 from fastapi.responses import JSONResponse
 
-from src.logger import logger
-from src.models.asset_responses import SteamResponse
-from src.utils import handle_error_exception
-from src.utils.redis_client import RedisClient
+from app.config import logger
+from app.database import RedisClient
+from app.schemas import SteamResponse
+from app.services.error_handler import handle_error_exception
 
 
 async def get_steam_item_price(
-        app_id: int,
-        market_hash_name: str,
-        redis_client: RedisClient
+    app_id: int,
+    market_hash_name: str,
+    redis_client: RedisClient | None,
 ) -> Union[SteamResponse, JSONResponse]:
     cache_key = f"steam:{app_id}:{market_hash_name}"
 
@@ -24,8 +24,14 @@ async def get_steam_item_price(
             return cache
 
     try:
-        logger.info(f"Fetching steam item {market_hash_name}, app_id={app_id} from Steam Market")
-        url = f"https://steamcommunity.com/market/priceoverview/?appid={app_id}&market_hash_name={quote(market_hash_name)}&currency=1"
+        logger.info(
+            f"Fetching steam item {market_hash_name}, app_id={app_id} from Steam Market"
+        )
+        url = (
+            "https://steamcommunity.com/market/priceoverview/"
+            f"?appid={app_id}&market_hash_name={quote(market_hash_name)}&currency=1"
+        )
+
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 data = await response.json()
@@ -34,14 +40,14 @@ async def get_steam_item_price(
         if not data.get("success"):
             return JSONResponse(
                 status_code=502,
-                content={"error": "Bad Gateway", "detail": "success == False"}
+                content={"error": "Bad Gateway", "detail": "success == False"},
             )
 
         price = data.get("lowest_price")
         if price is None:
             return JSONResponse(
                 status_code=404,
-                content={"error": "Not Found", "detail": "Steam item price not found"}
+                content={"error": "Not Found", "detail": "Steam item price not found"},
             )
 
         clean_price = float(price.replace("$", ""))
@@ -51,7 +57,7 @@ async def get_steam_item_price(
             price=clean_price,
             currency="USD",
             source="Steam Market",
-            cached_at=datetime.now()
+            cached_at=datetime.now(),
         )
 
         if redis_client:
@@ -59,5 +65,7 @@ async def get_steam_item_price(
 
         return response_data
     except Exception as e:
-        logger.error(f"Error fetching steam item {market_hash_name}, app_id={app_id}: {e}")
-        raise handle_error_exception(e, source="Steam Market API")
+        logger.error(
+            f"Error fetching steam item {market_hash_name}, app_id={app_id}: {e}"
+        )
+        raise handle_error_exception(e, source="Steam Market API") from e

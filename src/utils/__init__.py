@@ -1,2 +1,0 @@
-from src.utils.error_handler import handle_error_exception
-from src.utils.crypto_symbols import CRYPTO_SYMBOLS
