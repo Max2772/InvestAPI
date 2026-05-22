@@ -1,3 +1,5 @@
+name: investapi
+
 services:
   investapi-api:
     build:
