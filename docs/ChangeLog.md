@@ -13,6 +13,7 @@
   - `config.py` — environment settings and logging
   - `main.py` — FastAPI application
 * Removed legacy `src/` package. Single entry point: `app/main.py`.
+* Fixed `steam/` endpoint bug where skins with only median_price had **status 404**
 
 ---
 

@@ -1,6 +1,6 @@
 # InvestAPI 📈
 
-![version](https://img.shields.io/badge/version-1.1.1-blue)
+![version](https://img.shields.io/badge/version-1.2.0-blue)
 [![Python Version](https://img.shields.io/badge/python-3.10--3.13-blue)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com)
@@ -20,9 +20,18 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 
 ## [📦 Full Changelog](docs/ChangeLog.md)
 
-### 🆕 v1.1.2
-#### 🐛 Bug Fixes:
-* Renamed `market_name` to `name` in `SteamResponse` for consistency across all response models. This fixes compatibility issues and standardizes asset naming.
+### 🆕 v1.2.0
+#### 🛠 Improvements:
+* Refactored to **Layered Architecture** under `app/`:
+  - `routers/` — HTTP endpoints and DI
+  - `schemas/` — Pydantic response models
+  - `services/` — business logic
+  - `models.py` — `AssetType` enum and cache TTL
+  - `database.py` — Redis client
+  - `config.py` — environment settings and logging
+  - `main.py` — FastAPI application
+* Removed legacy `src/` package. Single entry point: `app/main.py`.
+* Fixed `steam/` endpoint bug where skins with only median_price had **status 404**
 
 ---
 
