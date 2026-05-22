@@ -7,8 +7,8 @@ from fastapi.responses import JSONResponse
 from app.config import logger
 from app.database import RedisClient
 from app.schemas import CryptoResponse
-from app.services.crypto_symbols import CRYPTO_SYMBOLS
-from app.services.error_handler import handle_error_exception
+from app.constants import CRYPTO_SYMBOLS
+from app.utils import handle_error_exception
 
 
 async def get_crypto_price(

@@ -229,6 +229,8 @@ app/
 ├── routers/       # HTTP routes and dependencies
 ├── schemas/       # Pydantic API models
 ├── services/      # Business logic (fetch prices, cache orchestration)
+├── constants/     # Static reference data (e.g. crypto symbol map)
+├── utils/         # Shared helpers (HTTP error mapping)
 ├── models.py      # Domain enums and cache TTL (ORM-ready)
 ├── database.py    # Redis client (persistence layer)
 ├── config.py      # Settings and logging

@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from app.config import logger
 from app.database import RedisClient
 from app.schemas import SteamResponse
-from app.services.error_handler import handle_error_exception
+from app.utils import handle_error_exception
 
 
 async def get_steam_item_price(

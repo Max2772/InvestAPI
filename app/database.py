@@ -4,7 +4,8 @@ from typing import Union
 import redis.asyncio as aioredis
 
 from app.config import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, logger
-from app.models import AssetType, TTL_BY_ASSET_TYPE, RESPONSE_BY_ASSET_TYPE
+from app.models import AssetType, TTL_BY_ASSET_TYPE
+from app.schemas import RESPONSE_BY_ASSET_TYPE
 from app.schemas.asset_responses import BaseAssetResponse
 
 
