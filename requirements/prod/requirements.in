@@ -1,6 +1,0 @@
-dotenv
-uvicorn
-fastapi
-aiohttp
-yfinance
-redis
