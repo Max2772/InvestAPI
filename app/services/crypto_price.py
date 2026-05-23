@@ -2,7 +2,7 @@ from datetime import datetime
 
 import aiohttp
 
-from app.config import CRYPTO_PROVIDER_NAME
+from app.config import CRYPTO_PROVIDER_NAME, REDIS_CRYPTO_INTERVAL
 from app.database import RedisClient
 from app.schemas import CryptoResponse
 from app.types.constants import CRYPTO_SYMBOLS
@@ -49,7 +49,7 @@ async def get_crypto_price(
     cache_key = f"coin:{coin}"
 
     if redis_client:
-        cache = await redis_client.get_cache(cache_key)
+        cache = await redis_client.get_cache(cache_key, CryptoResponse)
         if cache:
             return cache
 
@@ -57,7 +57,7 @@ async def get_crypto_price(
         response_data = await _fetch_crypto_price(coin, http_session)
 
         if redis_client:
-            await redis_client.set_cache(cache_key, response_data)
+            await redis_client.set_cache(cache_key, response_data, REDIS_CRYPTO_INTERVAL)
 
         return response_data
     except AssetNotFoundError:

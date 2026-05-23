@@ -2,7 +2,7 @@ from datetime import datetime
 
 import yfinance as yf
 
-from app.config import STOCK_PROVIDER_NAME
+from app.config import REDIS_STOCK_INTERVAL, STOCK_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas import StockResponse
 from app.utils import AssetNotFoundError, handle_error_exception
@@ -38,7 +38,7 @@ async def get_stock_price(
     cache_key = f"stock:{ticker}"
 
     if redis_client:
-        cache = await redis_client.get_cache(cache_key)
+        cache = await redis_client.get_cache(cache_key, StockResponse)
         if cache:
             return cache
 
@@ -46,7 +46,7 @@ async def get_stock_price(
         response_data = _fetch_stock_price(ticker)
 
         if redis_client:
-            await redis_client.set_cache(cache_key, response_data)
+            await redis_client.set_cache(cache_key, response_data, REDIS_STOCK_INTERVAL)
 
         return response_data
     except AssetNotFoundError:

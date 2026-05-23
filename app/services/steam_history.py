@@ -53,7 +53,7 @@ async def get_steam_item_history(
     cache_key = _cache_key(app_id, market_hash_name)
 
     if redis_client:
-        cached = await redis_client.get_model_cache(cache_key, SteamHistoryResponse)
+        cached = await redis_client.get_cache(cache_key, SteamHistoryResponse)
         if cached and cached.points:
             return _slice_cached(cached, app_id, market_hash_name, days)
 
@@ -86,7 +86,7 @@ async def get_steam_item_history(
         )
 
         if redis_client:
-            await redis_client.set_model_cache(
+            await redis_client.set_cache(
                 cache_key, full_response, REDIS_STEAM_HISTORY_INTERVAL
             )
 

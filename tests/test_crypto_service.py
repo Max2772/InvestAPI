@@ -51,7 +51,7 @@ async def test_crypto_cache_hit(redis_client, sample_crypto, fake_http_session):
     session = fake_http_session(
         FakeAiohttpResponse({}, raise_for_status=AssertionError("HTTP must not be called"))
     )
-    await redis_client.set_cache("coin:solana", sample_crypto)
+    await redis_client.set_cache("coin:solana", sample_crypto, ttl=300)
 
     result = await get_crypto_price("solana", redis_client, session)
 

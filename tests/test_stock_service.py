@@ -43,7 +43,7 @@ async def test_stock_cache_hit(redis_client, sample_stock, monkeypatch):
         "app.services.stock_price.yf.Ticker",
         lambda _: pytest.fail("yfinance must not be called on cache hit"),
     )
-    await redis_client.set_cache("stock:AMD", sample_stock)
+    await redis_client.set_cache("stock:AMD", sample_stock, ttl=900)
 
     result = await get_stock_price("AMD", redis_client)
 

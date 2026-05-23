@@ -40,7 +40,7 @@ async def test_steam_history_cache_hit(redis_client, sample_steam_history, fake_
     session = fake_http_session(
         FakeAiohttpResponse("", raise_for_status=AssertionError("HTTP must not be called"))
     )
-    await redis_client.set_model_cache(
+    await redis_client.set_cache(
         "steam:history:730:Glove Case",
         sample_steam_history,
         ttl=900,

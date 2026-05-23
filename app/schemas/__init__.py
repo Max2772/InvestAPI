@@ -1,4 +1,3 @@
-from app.types.enums.enums import AssetType
 from app.schemas.asset_responses import (
     BaseAssetResponse,
     StockResponse,
@@ -12,12 +11,6 @@ from app.schemas.history_responses import (
     StockHistoryResponse,
 )
 
-RESPONSE_BY_ASSET_TYPE: dict[AssetType, type[BaseAssetResponse]] = {
-    AssetType.STOCK: StockResponse,
-    AssetType.CRYPTO: CryptoResponse,
-    AssetType.STEAM: SteamResponse,
-}
-
 __all__ = [
     "BaseAssetResponse",
     "StockResponse",
@@ -27,5 +20,4 @@ __all__ = [
     "StockHistoryResponse",
     "CryptoHistoryResponse",
     "SteamHistoryResponse",
-    "RESPONSE_BY_ASSET_TYPE",
 ]

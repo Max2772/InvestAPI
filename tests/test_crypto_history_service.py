@@ -97,7 +97,7 @@ async def test_crypto_history_cache_hit_without_http(
     session = fake_http_session(
         FakeAiohttpResponse({}, raise_for_status=AssertionError("HTTP must not be called"))
     )
-    await redis_client.set_model_cache("coin:history:solana", cached, ttl=600)
+    await redis_client.set_cache("coin:history:solana", cached, ttl=600)
 
     result = await get_crypto_history("solana", 30, redis_client, session)
 

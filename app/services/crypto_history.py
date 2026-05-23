@@ -15,10 +15,6 @@ from app.utils.history_points import (
 from app.utils.logging import logger
 
 
-def _cache_key(coin: str) -> str:
-    return f"coin:history:{coin}"
-
-
 def _response_from_points(
     coin: str,
     points: list[HistoryPoint],
@@ -94,10 +90,10 @@ async def get_crypto_history(
     http_session: aiohttp.ClientSession,
 ) -> CryptoHistoryResponse:
     coin = CRYPTO_SYMBOLS.get(coin.upper(), coin).lower()
-    cache_key = _cache_key(coin)
+    cache_key = f"coin:history:{coin}"
 
     if redis_client:
-        cached = await redis_client.get_model_cache(cache_key, CryptoHistoryResponse)
+        cached = await redis_client.get_cache(cache_key, CryptoHistoryResponse)
         if cached and cached.points:
             return _slice_cached(cached, coin, days)
 
@@ -107,7 +103,7 @@ async def get_crypto_history(
         full_response = _response_from_points(coin, points, cached_at=cached_at)
 
         if redis_client:
-            await redis_client.set_model_cache(
+            await redis_client.set_cache(
                 cache_key, full_response, REDIS_CRYPTO_HISTORY_INTERVAL
             )
 

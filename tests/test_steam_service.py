@@ -67,7 +67,7 @@ async def test_steam_returns_cache_without_http_call(
     session = fake_http_session(
         FakeAiohttpResponse({}, raise_for_status=AssertionError("HTTP must not be called"))
     )
-    await redis_client.set_cache("steam:730:Glove Case", sample_steam)
+    await redis_client.set_cache("steam:730:Glove Case", sample_steam, ttl=900)
 
     result = await get_steam_item_price(730, "Glove Case", redis_client, session)
 

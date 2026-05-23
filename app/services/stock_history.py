@@ -77,7 +77,7 @@ async def get_stock_history(
     cache_key = _cache_key(ticker)
 
     if redis_client:
-        cached = await redis_client.get_model_cache(cache_key, StockHistoryResponse)
+        cached = await redis_client.get_cache(cache_key, StockHistoryResponse)
         if cached and cached.points:
             return _slice_cached(cached, ticker, days)
 
@@ -104,7 +104,7 @@ async def get_stock_history(
         )
 
         if redis_client:
-            await redis_client.set_model_cache(
+            await redis_client.set_cache(
                 cache_key, full_response, REDIS_STOCK_HISTORY_INTERVAL
             )
 

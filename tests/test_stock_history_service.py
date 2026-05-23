@@ -50,7 +50,7 @@ async def test_stock_history_cache_hit(
         pytest.fail("yfinance must not be called on cache hit")
 
     mock_yfinance_history(pd.DataFrame(), on_call=fail_if_yfinance_called)
-    await redis_client.set_model_cache(
+    await redis_client.set_cache(
         "stock:history:AMD",
         sample_stock_history,
         ttl=3600,
