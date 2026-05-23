@@ -2,7 +2,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.schemas import StockResponse
-from app.services.stock_service import get_stock_price
+from app.services.stock_price import get_stock_price
 from app.utils import AssetNotFoundError
 from tests.conftest import sample_stock
 

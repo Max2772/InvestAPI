@@ -5,6 +5,12 @@ from app.schemas.asset_responses import (
     CryptoResponse,
     SteamResponse,
 )
+from app.schemas.history_responses import (
+    CryptoHistoryResponse,
+    HistoryPoint,
+    SteamHistoryResponse,
+    StockHistoryResponse,
+)
 
 RESPONSE_BY_ASSET_TYPE: dict[AssetType, type[BaseAssetResponse]] = {
     AssetType.STOCK: StockResponse,
@@ -17,5 +23,9 @@ __all__ = [
     "StockResponse",
     "CryptoResponse",
     "SteamResponse",
+    "HistoryPoint",
+    "StockHistoryResponse",
+    "CryptoHistoryResponse",
+    "SteamHistoryResponse",
     "RESPONSE_BY_ASSET_TYPE",
 ]

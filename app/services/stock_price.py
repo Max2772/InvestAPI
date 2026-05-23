@@ -37,7 +37,6 @@ async def get_stock_price(
             full_name=company_name,
             price=round(stock_price, 2),
             currency="USD",
-            source="Yahoo Finance",
             cached_at=datetime.now(),
         )
 
@@ -49,4 +48,4 @@ async def get_stock_price(
         raise
     except Exception as e:
         logger.error(f"Error fetching stock {ticker}: {e}")
-        raise handle_error_exception(e, source="Yahoo Finance API") from e
+        raise handle_error_exception(e, source=StockResponse.source) from e

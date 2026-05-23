@@ -7,7 +7,15 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from app.main import app
-from app.schemas import CryptoResponse, StockResponse, SteamResponse
+from app.schemas import (
+    CryptoResponse,
+    StockResponse,
+    SteamResponse,
+    CryptoHistoryResponse,
+    StockHistoryResponse,
+    SteamHistoryResponse,
+    HistoryPoint,
+)
 
 FIXED_TIME = datetime(2026, 5, 22, 12, 0, 0)
 
@@ -55,6 +63,42 @@ def sample_crypto() -> CryptoResponse:
 
 
 @pytest.fixture
+def sample_stock_history() -> StockHistoryResponse:
+    return StockHistoryResponse(
+        name="AMD",
+        full_name="Advanced Micro Devices, Inc.",
+        interval="1d",
+        points=[
+            HistoryPoint(
+                timestamp=FIXED_TIME,
+                price=150.25,
+                volume=1_000_000.0,
+            )
+        ],
+        cached_at=FIXED_TIME,
+    )
+
+
+@pytest.fixture
+def sample_crypto_history() -> CryptoHistoryResponse:
+    return CryptoHistoryResponse(
+        name="solana",
+        points=[HistoryPoint(timestamp=FIXED_TIME, price=145.5, volume=1_000_000.0)],
+        cached_at=FIXED_TIME,
+    )
+
+
+@pytest.fixture
+def sample_steam_history() -> SteamHistoryResponse:
+    return SteamHistoryResponse(
+        app_id=730,
+        name="Glove Case",
+        points=[HistoryPoint(timestamp=FIXED_TIME, price=14.97, volume=42.0)],
+        cached_at=FIXED_TIME,
+    )
+
+
+@pytest.fixture
 def sample_steam() -> SteamResponse:
     return SteamResponse(
         app_id=730,
@@ -73,6 +117,11 @@ class FakeAiohttpResponse:
 
     async def json(self) -> Any:
         return self._payload
+
+    async def text(self) -> str:
+        if isinstance(self._payload, str):
+            return self._payload
+        raise TypeError("FakeAiohttpResponse.text() requires a string payload")
 
     def raise_for_status(self) -> None:
         if self._raise_for_status is not None:
@@ -94,7 +143,7 @@ class FakeAiohttpSession:
     def __init__(self, response: FakeAiohttpResponse):
         self._response = response
 
-    def get(self, url: str) -> FakeAiohttpGetCtx:
+    def get(self, url: str, **_kwargs: object) -> FakeAiohttpGetCtx:
         return FakeAiohttpGetCtx(self._response)
 
     async def __aenter__(self) -> "FakeAiohttpSession":
@@ -145,5 +194,26 @@ def mock_yfinance_ticker(monkeypatch: pytest.MonkeyPatch):
             return ticker
 
         monkeypatch.setattr("app.services.stock_service.yf.Ticker", ticker_factory)
+
+    return configure
+
+
+@pytest.fixture
+def mock_yfinance_history(monkeypatch: pytest.MonkeyPatch):
+    def configure(
+        history_df,
+        info: dict | None = None,
+        *,
+        on_call: object | None = None,
+    ) -> None:
+        def ticker_factory(_symbol: str) -> MagicMock:
+            if on_call is not None:
+                on_call()
+            ticker = MagicMock()
+            ticker.history.return_value = history_df
+            ticker.info = info or {}
+            return ticker
+
+        monkeypatch.setattr("app.services.stock_history_service.yf.Ticker", ticker_factory)
 
     return configure

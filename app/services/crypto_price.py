@@ -42,7 +42,6 @@ async def get_crypto_price(
             name=coin,
             price=round(price, 2),
             currency="USD",
-            source="CoinGecko",
             cached_at=datetime.now(),
         )
 
@@ -54,4 +53,4 @@ async def get_crypto_price(
         raise
     except Exception as e:
         logger.error(f"Error fetching crypto {coin}: {e}")
-        raise handle_error_exception(e, source="CoinGecko API") from e
+        raise handle_error_exception(e, source=CryptoResponse.source) from e

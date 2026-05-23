@@ -2,7 +2,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.schemas import CryptoResponse
-from app.services.crypto_service import get_crypto_price
+from app.services.crypto_price import get_crypto_price
 from app.utils import AssetNotFoundError
 from tests.conftest import FakeAiohttpResponse, sample_crypto
 

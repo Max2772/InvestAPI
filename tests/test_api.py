@@ -5,8 +5,23 @@ import pytest
 
 from app.types.enums.enums import AssetType
 from app.utils import AssetNotFoundError
-from app.schemas import CryptoResponse, StockResponse, SteamResponse
-from tests.conftest import FIXED_TIME, sample_crypto, sample_stock, sample_steam
+from app.schemas import (
+    CryptoResponse,
+    StockResponse,
+    SteamResponse,
+    StockHistoryResponse,
+    CryptoHistoryResponse,
+    SteamHistoryResponse,
+)
+from tests.conftest import (
+    FIXED_TIME,
+    sample_crypto,
+    sample_stock,
+    sample_steam,
+    sample_stock_history,
+    sample_crypto_history,
+    sample_steam_history,
+)
 
 
 @pytest.mark.asyncio
@@ -46,6 +61,41 @@ async def test_stock_endpoint_not_found(client, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_stock_history_endpoint_returns_service_result(
+    client, monkeypatch, sample_stock_history
+):
+    monkeypatch.setattr(
+        "app.routers.assets.get_stock_history",
+        AsyncMock(return_value=sample_stock_history),
+    )
+
+    response = await client.get("/stock/AMD/history?period=3mo&interval=1d")
+
+    assert response.status_code == 200
+    history = StockHistoryResponse.model_validate(response.json())
+    assert history.name == "AMD"
+    assert len(history.points) == 1
+    assert history.asset_type == AssetType.STOCK
+
+
+@pytest.mark.asyncio
+async def test_crypto_history_endpoint_returns_service_result(
+    client, monkeypatch, sample_crypto_history
+):
+    monkeypatch.setattr(
+        "app.routers.assets.get_crypto_history",
+        AsyncMock(return_value=sample_crypto_history),
+    )
+
+    response = await client.get("/crypto/solana/history?days=30")
+
+    assert response.status_code == 200
+    history = CryptoHistoryResponse.model_validate(response.json())
+    assert history.name == "solana"
+    assert history.asset_type == AssetType.CRYPTO
+
+
+@pytest.mark.asyncio
 async def test_crypto_endpoint_returns_service_result(client, monkeypatch, sample_crypto):
     monkeypatch.setattr(
         "app.routers.assets.get_crypto_price",
@@ -58,6 +108,24 @@ async def test_crypto_endpoint_returns_service_result(client, monkeypatch, sampl
     crypto = CryptoResponse.model_validate(response.json())
     assert crypto.name == "solana"
     assert crypto.asset_type == AssetType.CRYPTO
+
+
+@pytest.mark.asyncio
+async def test_steam_history_endpoint_returns_service_result(
+    client, monkeypatch, sample_steam_history
+):
+    monkeypatch.setattr(
+        "app.routers.assets.get_steam_item_history",
+        AsyncMock(return_value=sample_steam_history),
+    )
+
+    response = await client.get("/steam/730/Glove%20Case/history?days=90")
+
+    assert response.status_code == 200
+    history = SteamHistoryResponse.model_validate(response.json())
+    assert history.app_id == 730
+    assert history.name == "Glove Case"
+    assert history.asset_type == AssetType.STEAM
 
 
 @pytest.mark.asyncio

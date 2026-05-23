@@ -2,7 +2,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.schemas import SteamResponse
-from app.services.steam_service import get_steam_item_price
+from app.services.steam_price import get_steam_item_price
 from app.utils import AssetNotFoundError, ExternalServiceError
 from tests.conftest import FakeAiohttpResponse, sample_steam
 
