@@ -48,4 +48,4 @@ async def get_stock_price(
         raise
     except Exception as e:
         logger.error(f"Error fetching stock {ticker}: {e}")
-        raise handle_error_exception(e, source=StockResponse.source) from e
+        raise handle_error_exception(e, source="Yahoo Finance API") from e

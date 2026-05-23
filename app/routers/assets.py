@@ -46,10 +46,9 @@ async def stock_price(ticker: str, redis_client: RedisDep):
 async def stock_history(
     ticker: str,
     redis_client: RedisDep,
-    period: str = Query("3mo", description="yfinance period, e.g. 1mo, 3mo, 1y, max"),
-    interval: str = Query("1d", description="yfinance interval, e.g. 1d, 1h"),
+    days: int = Query(90, ge=1, le=3650, description="Number of days of history to return"),
 ):
-    return await get_stock_history(ticker, period, interval, redis_client)
+    return await get_stock_history(ticker, days, redis_client)
 
 
 @router.get(

@@ -193,7 +193,7 @@ def mock_yfinance_ticker(monkeypatch: pytest.MonkeyPatch):
             ticker.fast_info = MagicMock(last_price=last_price)
             return ticker
 
-        monkeypatch.setattr("app.services.stock_service.yf.Ticker", ticker_factory)
+        monkeypatch.setattr("app.services.stock_price.yf.Ticker", ticker_factory)
 
     return configure
 
@@ -214,6 +214,6 @@ def mock_yfinance_history(monkeypatch: pytest.MonkeyPatch):
             ticker.info = info or {}
             return ticker
 
-        monkeypatch.setattr("app.services.stock_history_service.yf.Ticker", ticker_factory)
+        monkeypatch.setattr("app.services.stock_history.yf.Ticker", ticker_factory)
 
     return configure

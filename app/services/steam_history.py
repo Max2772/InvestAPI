@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from urllib.parse import quote
 
 import aiohttp
@@ -7,6 +7,11 @@ from app.config import REDIS_STEAM_HISTORY_INTERVAL
 from app.database import RedisClient
 from app.schemas.history_responses import HistoryPoint, SteamHistoryResponse
 from app.utils import AssetNotFoundError, handle_error_exception
+from app.utils.history_points import (
+    DAILY_INTERVAL,
+    collapse_to_daily,
+    filter_points_by_days,
+)
 from app.utils.logging import logger
 from app.utils.steam_history_parser import parse_steam_listing_html
 
@@ -19,9 +24,23 @@ STEAM_LISTING_HEADERS = {
 }
 
 
-def _filter_points_by_days(points: list[HistoryPoint], days: int) -> list[HistoryPoint]:
-    cutoff = datetime.now() - timedelta(days=days)
-    return [point for point in points if point.timestamp >= cutoff]
+def _cache_key(app_id: int, market_hash_name: str) -> str:
+    return f"steam:history:{app_id}:{market_hash_name}"
+
+
+def _slice_cached(
+    cached: SteamHistoryResponse, app_id: int, market_hash_name: str, days: int
+) -> SteamHistoryResponse:
+    points = filter_points_by_days(cached.points, days)
+    if not points:
+        raise AssetNotFoundError(f"Steam item history for {market_hash_name} not found")
+    return SteamHistoryResponse(
+        app_id=app_id,
+        name=market_hash_name,
+        interval=DAILY_INTERVAL,
+        points=points,
+        cached_at=cached.cached_at,
+    )
 
 
 async def get_steam_item_history(
@@ -31,12 +50,12 @@ async def get_steam_item_history(
     redis_client: RedisClient | None,
     http_session: aiohttp.ClientSession,
 ) -> SteamHistoryResponse:
-    cache_key = f"steam:history:{app_id}:{market_hash_name}:{days}"
+    cache_key = _cache_key(app_id, market_hash_name)
 
     if redis_client:
-        cache = await redis_client.get_model_cache(cache_key, SteamHistoryResponse)
-        if cache:
-            return cache
+        cached = await redis_client.get_model_cache(cache_key, SteamHistoryResponse)
+        if cached and cached.points:
+            return _slice_cached(cached, app_id, market_hash_name, days)
 
     try:
         listing_url = (
@@ -52,35 +71,30 @@ async def get_steam_item_history(
             html = await response.text()
             response.raise_for_status()
 
-        points = parse_steam_listing_html(html)
+        points = collapse_to_daily(parse_steam_listing_html(html))
         if not points:
             raise AssetNotFoundError(
                 f"Steam item history for {market_hash_name} not found"
             )
 
-        points = _filter_points_by_days(points, days)
-        if not points:
-            raise AssetNotFoundError(
-                f"Steam item history for {market_hash_name} not found"
-            )
-
-        response_data = SteamHistoryResponse(
+        full_response = SteamHistoryResponse(
             app_id=app_id,
             name=market_hash_name,
+            interval=DAILY_INTERVAL,
             points=points,
             cached_at=datetime.now(),
         )
 
         if redis_client:
             await redis_client.set_model_cache(
-                cache_key, response_data, REDIS_STEAM_HISTORY_INTERVAL
+                cache_key, full_response, REDIS_STEAM_HISTORY_INTERVAL
             )
 
-        return response_data
+        return _slice_cached(full_response, app_id, market_hash_name, days)
     except AssetNotFoundError:
         raise
     except Exception as e:
         logger.error(
             f"Error fetching steam history for {market_hash_name}, app_id={app_id}: {e}"
         )
-        raise handle_error_exception(e, source=SteamHistoryResponse.source) from e
+        raise handle_error_exception(e, source="Steam Market") from e

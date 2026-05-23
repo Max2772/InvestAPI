@@ -65,4 +65,4 @@ async def get_steam_item_price(
         logger.error(
             f"Error fetching steam item {market_hash_name}, app_id={app_id}: {e}"
         )
-        raise handle_error_exception(e, source=SteamResponse.source) from e
+        raise handle_error_exception(e, source="Steam Market") from e

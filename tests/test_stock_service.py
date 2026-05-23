@@ -40,7 +40,7 @@ async def test_stock_not_found_missing_price(mock_yfinance_ticker):
 @pytest.mark.asyncio
 async def test_stock_cache_hit(redis_client, sample_stock, monkeypatch):
     monkeypatch.setattr(
-        "app.services.stock_service.yf.Ticker",
+        "app.services.stock_price.yf.Ticker",
         lambda _: pytest.fail("yfinance must not be called on cache hit"),
     )
     await redis_client.set_cache("stock:AMD", sample_stock)
@@ -55,7 +55,7 @@ async def test_stock_unexpected_error(monkeypatch):
     def raise_error(_ticker: str) -> None:
         raise RuntimeError("yahoo down")
 
-    monkeypatch.setattr("app.services.stock_service.yf.Ticker", raise_error)
+    monkeypatch.setattr("app.services.stock_price.yf.Ticker", raise_error)
 
     with pytest.raises(HTTPException) as exc_info:
         await get_stock_price("AMD", None)

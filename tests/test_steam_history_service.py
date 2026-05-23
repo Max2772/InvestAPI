@@ -41,14 +41,16 @@ async def test_steam_history_cache_hit(redis_client, sample_steam_history, fake_
         FakeAiohttpResponse("", raise_for_status=AssertionError("HTTP must not be called"))
     )
     await redis_client.set_model_cache(
-        "steam:history:730:Glove Case:30",
+        "steam:history:730:Glove Case",
         sample_steam_history,
         ttl=900,
     )
 
     result = await get_steam_item_history(730, "Glove Case", 30, redis_client, session)
 
-    assert result == sample_steam_history
+    assert result.name == "Glove Case"
+    assert result.interval == "1d"
+    assert result.cached_at == sample_steam_history.cached_at
 
 
 @pytest.mark.asyncio

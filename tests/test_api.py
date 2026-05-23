@@ -69,7 +69,7 @@ async def test_stock_history_endpoint_returns_service_result(
         AsyncMock(return_value=sample_stock_history),
     )
 
-    response = await client.get("/stock/AMD/history?period=3mo&interval=1d")
+    response = await client.get("/stock/AMD/history?days=90")
 
     assert response.status_code == 200
     history = StockHistoryResponse.model_validate(response.json())
