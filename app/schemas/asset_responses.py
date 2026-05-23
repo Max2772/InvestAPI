@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from app.config import STOCK_PROVIDER_NAME, CRYPTO_PROVIDER_NAME, STEAM_PROVIDER_NAME
 from app.types.enums.enums import AssetType
 
 
@@ -14,18 +15,18 @@ class BaseAssetResponse(BaseModel):
 class StockResponse(BaseAssetResponse):
     asset_type: AssetType = AssetType.STOCK
     full_name: str
-    source: str = "Yahoo Finance API"
+    source: str = STOCK_PROVIDER_NAME
     name: str
 
 
 class CryptoResponse(BaseAssetResponse):
     asset_type: AssetType = AssetType.CRYPTO
-    source: str = "CoinGecko API"
+    source: str = CRYPTO_PROVIDER_NAME
     name: str
 
 
 class SteamResponse(BaseAssetResponse):
     asset_type: AssetType = AssetType.STEAM
-    source: str = "Steam Market"
+    source: str = STEAM_PROVIDER_NAME
     app_id: int
     name: str

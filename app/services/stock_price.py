@@ -2,6 +2,7 @@ from datetime import datetime
 
 import yfinance as yf
 
+from app.config import STOCK_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas import StockResponse
 from app.utils import AssetNotFoundError, handle_error_exception
@@ -48,4 +49,4 @@ async def get_stock_price(
         raise
     except Exception as e:
         logger.error(f"Error fetching stock {ticker}: {e}")
-        raise handle_error_exception(e, source="Yahoo Finance API") from e
+        raise handle_error_exception(e, source=STOCK_PROVIDER_NAME) from e

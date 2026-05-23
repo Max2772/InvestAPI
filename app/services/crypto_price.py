@@ -2,6 +2,7 @@ from datetime import datetime
 
 import aiohttp
 
+from app.config import CRYPTO_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas import CryptoResponse
 from app.types.constants import CRYPTO_SYMBOLS
@@ -53,4 +54,4 @@ async def get_crypto_price(
         raise
     except Exception as e:
         logger.error(f"Error fetching crypto {coin}: {e}")
-        raise handle_error_exception(e, source="CoinGecko API") from e
+        raise handle_error_exception(e, source=CRYPTO_PROVIDER_NAME) from e

@@ -4,6 +4,7 @@ from urllib.parse import quote
 
 import aiohttp
 
+from app.config import STEAM_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas import SteamResponse
 from app.utils import AssetNotFoundError, ExternalServiceError, handle_error_exception
@@ -65,4 +66,4 @@ async def get_steam_item_price(
         logger.error(
             f"Error fetching steam item {market_hash_name}, app_id={app_id}: {e}"
         )
-        raise handle_error_exception(e, source="Steam Market") from e
+        raise handle_error_exception(e, source=STEAM_PROVIDER_NAME) from e

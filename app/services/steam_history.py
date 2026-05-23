@@ -3,7 +3,7 @@ from urllib.parse import quote
 
 import aiohttp
 
-from app.config import REDIS_STEAM_HISTORY_INTERVAL
+from app.config import REDIS_STEAM_HISTORY_INTERVAL, STEAM_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas.history_responses import HistoryPoint, SteamHistoryResponse
 from app.utils import AssetNotFoundError, handle_error_exception
@@ -97,4 +97,4 @@ async def get_steam_item_history(
         logger.error(
             f"Error fetching steam history for {market_hash_name}, app_id={app_id}: {e}"
         )
-        raise handle_error_exception(e, source="Steam Market") from e
+        raise handle_error_exception(e, source=STEAM_PROVIDER_NAME) from e

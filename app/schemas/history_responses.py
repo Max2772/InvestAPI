@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.config import STOCK_PROVIDER_NAME, CRYPTO_PROVIDER_NAME, STEAM_PROVIDER_NAME
 from app.types.enums.enums import AssetType
 
 
@@ -17,7 +18,7 @@ class StockHistoryResponse(BaseModel):
     full_name: str | None = None
     interval: str
     points: list[HistoryPoint] = Field(default_factory=list)
-    source: str = "Yahoo Finance API"
+    source: str = STOCK_PROVIDER_NAME
     cached_at: datetime
 
 
@@ -26,7 +27,7 @@ class CryptoHistoryResponse(BaseModel):
     name: str
     interval: str = "1d"
     points: list[HistoryPoint] = Field(default_factory=list)
-    source: str = "CoinGecko API"
+    source: str = CRYPTO_PROVIDER_NAME
     cached_at: datetime
 
 
@@ -36,5 +37,5 @@ class SteamHistoryResponse(BaseModel):
     name: str
     interval: str = "1d"
     points: list[HistoryPoint] = Field(default_factory=list)
-    source: str = "Steam Market"
+    source: str = STEAM_PROVIDER_NAME
     cached_at: datetime

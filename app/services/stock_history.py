@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 import yfinance as yf
 
-from app.config import REDIS_STOCK_HISTORY_INTERVAL, STOCK_HISTORY_YFINANCE_PERIOD
+from app.config import REDIS_STOCK_HISTORY_INTERVAL, STOCK_HISTORY_YFINANCE_PERIOD, STOCK_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas.history_responses import HistoryPoint, StockHistoryResponse
 from app.utils import AssetNotFoundError, handle_error_exception
@@ -113,4 +113,4 @@ async def get_stock_history(
         raise
     except Exception as e:
         logger.error(f"Error fetching stock history for {ticker}: {e}")
-        raise handle_error_exception(e, source="Yahoo Finance API") from e
+        raise handle_error_exception(e, source=STOCK_PROVIDER_NAME) from e

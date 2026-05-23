@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 import aiohttp
 
-from app.config import CRYPTO_HISTORY_MAX_DAYS, REDIS_CRYPTO_HISTORY_INTERVAL
+from app.config import CRYPTO_HISTORY_MAX_DAYS, REDIS_CRYPTO_HISTORY_INTERVAL, CRYPTO_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas.history_responses import CryptoHistoryResponse, HistoryPoint
 from app.types.constants import CRYPTO_SYMBOLS
@@ -116,4 +116,4 @@ async def get_crypto_history(
         raise
     except Exception as e:
         logger.error(f"Error fetching crypto history for {coin}: {e}")
-        raise handle_error_exception(e, source="CoinGecko API") from e
+        raise handle_error_exception(e, source=CRYPTO_PROVIDER_NAME) from e
