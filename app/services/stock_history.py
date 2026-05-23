@@ -8,7 +8,8 @@ from app.config import REDIS_STOCK_HISTORY_INTERVAL, STOCK_HISTORY_PERIOD, STOCK
 from app.database import RedisClient
 from app.schemas.history_responses import HistoryPoint, StockHistoryResponse
 from app.utils import AssetNotFoundError, handle_error_exception
-from app.utils.history_points import DAILY_INTERVAL, filter_points_by_days
+from app.schemas.history_responses import DAILY_INTERVAL
+from app.utils.history_points import filter_points_by_days
 from app.utils.logging import logger
 
 

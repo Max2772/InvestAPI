@@ -4,7 +4,8 @@ from pydantic import BaseModel, Field
 
 from app.config import STOCK_PROVIDER_NAME, CRYPTO_PROVIDER_NAME, STEAM_PROVIDER_NAME
 from app.types.enums.enums import AssetType
-from app.utils.history_points import DAILY_INTERVAL
+
+DAILY_INTERVAL = "1d"
 
 
 class HistoryPoint(BaseModel):

@@ -7,11 +7,8 @@ from app.config import REDIS_STEAM_HISTORY_INTERVAL, STEAM_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas.history_responses import SteamHistoryResponse, HistoryPoint
 from app.utils import AssetNotFoundError, handle_error_exception
-from app.utils.history_points import (
-    DAILY_INTERVAL,
-    collapse_to_daily,
-    filter_points_by_days,
-)
+from app.schemas.history_responses import DAILY_INTERVAL
+from app.utils.history_points import collapse_to_daily, filter_points_by_days
 from app.utils.logging import logger
 from app.utils.steam_history_parser import parse_steam_listing_html
 
