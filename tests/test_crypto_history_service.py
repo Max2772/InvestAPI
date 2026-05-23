@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import pytest
 from fastapi import HTTPException
 
-from app.config import CRYPTO_HISTORY_MAX_DAYS
+from app.config import CRYPTO_HISTORY_PERIOD
 from app.schemas.history_responses import CryptoHistoryResponse, HistoryPoint
 from app.services.crypto_history import get_crypto_history
 from app.utils import AssetNotFoundError
@@ -52,7 +52,7 @@ async def test_crypto_history_fetches_max_days(fake_http_session):
 
     await get_crypto_history("solana", 7, None, TrackingSession())
 
-    assert f"days={CRYPTO_HISTORY_MAX_DAYS}" in captured["url"]
+    assert f"days={CRYPTO_HISTORY_PERIOD}" in captured["url"]
 
 
 @pytest.mark.asyncio

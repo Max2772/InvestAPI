@@ -2,51 +2,40 @@ from datetime import datetime, timezone
 
 import aiohttp
 
-from app.config import CRYPTO_HISTORY_MAX_DAYS, REDIS_CRYPTO_HISTORY_INTERVAL, CRYPTO_PROVIDER_NAME
+from app.config import CRYPTO_HISTORY_PERIOD, REDIS_CRYPTO_HISTORY_INTERVAL, CRYPTO_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas.history_responses import CryptoHistoryResponse, HistoryPoint
 from app.types.constants import CRYPTO_SYMBOLS
 from app.utils import AssetNotFoundError, handle_error_exception
 from app.utils.history_points import (
-    DAILY_INTERVAL,
     collapse_to_daily,
     filter_points_by_days,
 )
 from app.utils.logging import logger
 
 
-def _response_from_points(
-    coin: str,
-    points: list[HistoryPoint],
-    *,
-    cached_at: datetime,
-) -> CryptoHistoryResponse:
-    return CryptoHistoryResponse(
-        name=coin,
-        interval=DAILY_INTERVAL,
-        points=points,
-        cached_at=cached_at,
-    )
-
-
 def _slice_cached(cached: CryptoHistoryResponse, coin: str, days: int) -> CryptoHistoryResponse:
     points = filter_points_by_days(cached.points, days)
     if not points:
         raise AssetNotFoundError(f"Cryptocurrency history for {coin} not found")
-    return _response_from_points(coin, points, cached_at=cached.cached_at)
+    return CryptoHistoryResponse(
+        name=coin,
+        points=points,
+        cached_at=cached.cached_at,
+    )
 
 
-async def _fetch_max_history(
+async def _fetch_history(
     coin: str,
     http_session: aiohttp.ClientSession,
 ) -> list[HistoryPoint]:
     logger.info(
-        f"Fetching crypto history for {coin} ({CRYPTO_HISTORY_MAX_DAYS} days) "
-        "from CoinGecko API"
+        f"Fetching crypto history for {coin} ({CRYPTO_HISTORY_PERIOD} days) "
+        f"from {CRYPTO_PROVIDER_NAME}"
     )
     url = (
         "https://api.coingecko.com/api/v3/coins/"
-        f"{coin}/market_chart?vs_currency=usd&days={CRYPTO_HISTORY_MAX_DAYS}"
+        f"{coin}/market_chart?vs_currency=usd&days={CRYPTO_HISTORY_PERIOD}"
     )
 
     async with http_session.get(url) as response:
@@ -98,9 +87,14 @@ async def get_crypto_history(
             return _slice_cached(cached, coin, days)
 
     try:
-        points = await _fetch_max_history(coin, http_session)
+        points = await _fetch_history(coin, http_session)
         cached_at = datetime.now()
-        full_response = _response_from_points(coin, points, cached_at=cached_at)
+
+        full_response = CryptoHistoryResponse(
+            name=coin,
+            points=points,
+            cached_at=cached_at,
+        )
 
         if redis_client:
             await redis_client.set_cache(

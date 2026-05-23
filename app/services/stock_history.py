@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 import yfinance as yf
 
-from app.config import REDIS_STOCK_HISTORY_INTERVAL, STOCK_HISTORY_YFINANCE_PERIOD, STOCK_PROVIDER_NAME
+from app.config import REDIS_STOCK_HISTORY_INTERVAL, STOCK_HISTORY_PERIOD, STOCK_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas.history_responses import HistoryPoint, StockHistoryResponse
 from app.utils import AssetNotFoundError, handle_error_exception
@@ -12,13 +12,9 @@ from app.utils.history_points import DAILY_INTERVAL, filter_points_by_days
 from app.utils.logging import logger
 
 
-def _cache_key(ticker: str) -> str:
-    return f"stock:history:{ticker}"
-
-
 def _fetch_history(ticker: str) -> tuple[pd.DataFrame, str | None]:
     yf_ticker = yf.Ticker(ticker)
-    df = yf_ticker.history(period=STOCK_HISTORY_YFINANCE_PERIOD, interval=DAILY_INTERVAL)
+    df = yf_ticker.history(period=STOCK_HISTORY_PERIOD, interval=DAILY_INTERVAL)
     full_name: str | None = None
     try:
         info = yf_ticker.info
@@ -74,7 +70,7 @@ async def get_stock_history(
     redis_client: RedisClient | None,
 ) -> StockHistoryResponse:
     ticker = ticker.upper()
-    cache_key = _cache_key(ticker)
+    cache_key = f"stock:history:{ticker}"
 
     if redis_client:
         cached = await redis_client.get_cache(cache_key, StockHistoryResponse)
@@ -84,7 +80,7 @@ async def get_stock_history(
     try:
         logger.info(
             f"Fetching stock history for {ticker} "
-            f"(period={STOCK_HISTORY_YFINANCE_PERIOD}, interval={DAILY_INTERVAL})"
+            f"(period={STOCK_HISTORY_PERIOD}, interval={DAILY_INTERVAL})"
         )
         df, full_name = await asyncio.to_thread(_fetch_history, ticker)
         if df.empty:

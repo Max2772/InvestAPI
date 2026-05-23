@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from app.config import STOCK_PROVIDER_NAME, CRYPTO_PROVIDER_NAME, STEAM_PROVIDER_NAME
 from app.types.enums.enums import AssetType
+from app.utils.history_points import DAILY_INTERVAL
 
 
 class HistoryPoint(BaseModel):
@@ -25,7 +26,7 @@ class StockHistoryResponse(BaseModel):
 class CryptoHistoryResponse(BaseModel):
     asset_type: AssetType = AssetType.CRYPTO
     name: str
-    interval: str = "1d"
+    interval: str = DAILY_INTERVAL
     points: list[HistoryPoint] = Field(default_factory=list)
     source: str = CRYPTO_PROVIDER_NAME
     cached_at: datetime
@@ -35,7 +36,7 @@ class SteamHistoryResponse(BaseModel):
     asset_type: AssetType = AssetType.STEAM
     app_id: int
     name: str
-    interval: str = "1d"
+    interval: str = DAILY_INTERVAL
     points: list[HistoryPoint] = Field(default_factory=list)
     source: str = STEAM_PROVIDER_NAME
     cached_at: datetime
