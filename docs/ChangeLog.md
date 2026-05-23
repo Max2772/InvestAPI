@@ -2,13 +2,36 @@
 
 ---
 
+### 🆕 v1.3.0
+
+#### ✨ New Features:
+* **Price history endpoints** for building charts (daily interval `1d`):
+  - `GET /stock/{ticker}/history?days=90` — Yahoo Finance via `yfinance` (`period=max`, sliced by `days`)
+  - `GET /crypto/{coin}/history?days=30` — CoinGecko `market_chart` (full period cached, sliced by `days`)
+  - `GET /steam/{app_id}/{market_hash_name}/history?days=90` — parsed from Steam Market listing HTML
+* New schemas: `HistoryPoint`, `StockHistoryResponse`, `CryptoHistoryResponse`, `SteamHistoryResponse` in `app/schemas/history_responses.py`.
+* Steam history parser (`app/utils/steam_history_parser.py`): supports legacy `var line1=...` and modern SSR embedded price data (`time`, `price_median`, `purchases`).
+* Shared helpers in `app/utils/history_points.py`: `filter_points_by_days`, `collapse_to_daily`.
+
+#### 🛠 Improvements:
+* **Smart history caching** — one “max” dataset per asset in Redis, client `days` only filters the response:
+  - `coin:history:{coin}` (CoinGecko, default 365 days)
+  - `stock:history:{ticker}` (yfinance `max`)
+  - `steam:history:{app_id}:{market_hash_name}` (full parsed history)
+* Simplified `RedisClient`: universal `get_cache(key, model_cls)` and `set_cache(key, model, ttl)` with direct Pydantic JSON (removed `{asset_type, data}` wrapper).
+* Split price services: `stock_price.py`, `crypto_price.py`, `steam_price.py`; history: `stock_history.py`, `crypto_history.py`, `steam_history.py`.
+* Provider names and history settings centralized in `app/config.py` (`STOCK_PROVIDER_NAME`, `CRYPTO_HISTORY_PERIOD`, `STOCK_HISTORY_PERIOD`, `REDIS_*_HISTORY_INTERVAL`, etc.).
+* Expanded test suite for history services, Steam HTML parser, and cache slicing.
+
+---
+
 ### 🆕 v1.2.0
 #### 🛠 Improvements:
 * Refactored to **Layered Architecture** under `app/`:
   - `routers/` — HTTP endpoints and DI
   - `schemas/` — Pydantic response models
   - `services/` — business logic
-  - `models.py` — `AssetType` enum and cache TTL
+  - `types/` — enums and constants
   - `database.py` — Redis client
   - `config.py` — environment settings and logging
   - `main.py` — FastAPI application

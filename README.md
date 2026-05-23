@@ -1,37 +1,49 @@
 # InvestAPI 📈
 
-![version](https://img.shields.io/badge/version-1.2.0-blue)
-[![Python Version](https://img.shields.io/badge/python-3.10--3.13-blue)](https://www.python.org)
+![version](https://img.shields.io/badge/version-1.3.0-blue)
+[![Python Version](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com)
 
-⚡ InvestAPI is a high-performance API built with [FastAPI](https://fastapi.tiangolo.com/) and [Redis](https://redis.io/) that provides up-to-date prices for stocks, ETFs, cryptocurrencies and Steam Market items. It leverages Redis for caching to ensure lightning-fast responses.
+⚡ InvestAPI is a high-performance API built with [FastAPI](https://fastapi.tiangolo.com/) and [Redis](https://redis.io/) that provides up-to-date prices and **daily price history** for stocks, ETFs, cryptocurrencies, and Steam Market items. Redis caches provider responses to keep latency low and reduce external API load.
 
-The project was created as a unified interface for the Telegram bot [@InvestingAPIBot](https://github.com/Max2772/InvestingAPIBot) to fetch and cache price data for various asset types, which are hard to source elsewhere. It can also be used for other services, such as websites or investment applications.
+The project was created as a unified interface for the Telegram bot [@InvestingAPIBot](https://github.com/Max2772/InvestingAPIBot) to fetch and cache price data for various asset types. It can also be used for websites, dashboards, or investment applications.
 
 **Key Features:**
-- 📊 Stock and ETF prices via `/stock/{ticker}` (data from [Yahoo Finance](https://finance.yahoo.com/)).
-- 💰 Cryptocurrency prices via `/crypto/{coin}` (data from [CoinGecko](https://www.coingecko.com/)).
-- 🎮 Steam item prices via `/steam/{app_id}/{market_name}` (data from [Steam Community Market](https://steamcommunity.com/market/)).
-- 🚀 Fast caching with Redis to minimize external requests.
-- 🌐 Asynchronous requests using `aiohttp` for high performance.
+- 📊 Stock and ETF **spot prices** via `/stock/{ticker}` ([Yahoo Finance](https://finance.yahoo.com/) / `yfinance`).
+- 📈 Stock **history** via `/stock/{ticker}/history?days=90` (daily candles, `1d`).
+- 💰 Cryptocurrency **spot prices** via `/crypto/{coin}` ([CoinGecko](https://www.coingecko.com/)).
+- 📉 Crypto **history** via `/crypto/{coin}/history?days=30` (daily points).
+- 🎮 Steam item **spot prices** via `/steam/{app_id}/{market_hash_name}` ([Steam Community Market](https://steamcommunity.com/market/)).
+- 📊 Steam item **history** via `/steam/{app_id}/{market_hash_name}/history?days=90` (parsed from listing page HTML).
+- 🚀 Redis caching with “fetch max once, slice by `days`” for history endpoints.
+- 🌐 Async HTTP via `aiohttp` for crypto and Steam.
 
 ---
 
 ## [📦 Full Changelog](docs/ChangeLog.md)
 
-### 🆕 v1.2.0
+### 🆕 v1.3.0
+
+#### ✨ New Features:
+* **Price history endpoints** for building charts (daily interval `1d`):
+  - `GET /stock/{ticker}/history?days=90` — Yahoo Finance via `yfinance` (`period=max`, sliced by `days`)
+  - `GET /crypto/{coin}/history?days=30` — CoinGecko `market_chart` (full period cached, sliced by `days`)
+  - `GET /steam/{app_id}/{market_hash_name}/history?days=90` — parsed from Steam Market listing HTML
+* New schemas: `HistoryPoint`, `StockHistoryResponse`, `CryptoHistoryResponse`, `SteamHistoryResponse` in `app/schemas/history_responses.py`.
+* Steam history parser (`app/utils/steam_history_parser.py`): supports legacy `var line1=...` and modern SSR embedded price data (`time`, `price_median`, `purchases`).
+* Shared helpers in `app/utils/history_points.py`: `filter_points_by_days`, `collapse_to_daily`.
+
 #### 🛠 Improvements:
-* Refactored to **Layered Architecture** under `app/`:
-  - `routers/` — HTTP endpoints and DI
-  - `schemas/` — Pydantic response models
-  - `services/` — business logic
-  - `models.py` — `AssetType` enum and cache TTL
-  - `database.py` — Redis client
-  - `config.py` — environment settings and logging
-  - `main.py` — FastAPI application
-* Removed legacy `src/` package. Single entry point: `app/main.py`.
-* Fixed `steam/` endpoint bug where skins with only median_price had **status 404**
+* **Smart history caching** — one “max” dataset per asset in Redis, client `days` only filters the response:
+  - `coin:history:{coin}` (CoinGecko, default 365 days)
+  - `stock:history:{ticker}` (yfinance `max`)
+  - `steam:history:{app_id}:{market_hash_name}` (full parsed history)
+* Simplified `RedisClient`: universal `get_cache(key, model_cls)` and `set_cache(key, model, ttl)` with direct Pydantic JSON (removed `{asset_type, data}` wrapper).
+* Split price services: `stock_price.py`, `crypto_price.py`, `steam_price.py`; history: `stock_history.py`, `crypto_history.py`, `steam_history.py`.
+* Provider names and history settings centralized in `app/config.py` (`STOCK_PROVIDER_NAME`, `CRYPTO_HISTORY_PERIOD`, `STOCK_HISTORY_PERIOD`, `REDIS_*_HISTORY_INTERVAL`, etc.).
+* Expanded test suite for history services, Steam HTML parser, and cache slicing.
+
 
 ---
 
@@ -40,9 +52,8 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 ### Requirements
 - Python 3.11+ (see `requires-python` in `pyproject.toml`).
 - [uv](https://docs.astral.sh/uv/) — dependency and environment manager.
-- Redis (installed via Docker or manually).
-- Docker (optional, for running with `docker-compose`).
-- OS: Tested on Windows; Linux support to be added later.
+- Redis (Docker or local).
+- Docker (optional).
 
 ### Installation with Docker (Recommended)
 1. Clone the repository:
@@ -63,35 +74,30 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
    git clone https://github.com/Max2772/InvestAPI.git
    cd InvestAPI
    ```
-2. Install dependencies with [uv](https://docs.astral.sh/uv/):
+2. Install dependencies:
    ```bash
    uv sync
    ```
-   Production only (no dev tools such as `pytest`):
+   Production only:
    ```bash
    uv sync --no-dev
    ```
-   `uv sync` reads `pyproject.toml` and `uv.lock`, creates a virtual environment, and installs pinned packages.
-3. Ensure Redis is installed and running.
-
+3. Ensure Redis is running.
 4. Start the API:
    ```bash
    uv run uvicorn app.main:app --reload
    ```
    or
-
    ```bash
    uv run fastapi dev app/main.py
    ```
-5. The API will be available at `http://localhost:8000`.
+5. Open `http://localhost:8000/docs` for interactive API documentation.
 
 ## Usage 📝
 
-InvestAPI provides three main endpoints. Interactive documentation is available at `http://localhost:8000/docs`.
+### Spot prices
 
-### Example Requests
-
-1. **Stocks/ETFs**:
+1. **Stocks / ETFs**
    ```bash
    curl http://localhost:8000/stock/MSFT
    ```
@@ -108,7 +114,7 @@ InvestAPI provides three main endpoints. Interactive documentation is available 
    }
    ```
 
-2. **Cryptocurrency**:
+2. **Cryptocurrency**
    ```bash
    curl http://localhost:8000/crypto/solana
    ```
@@ -124,7 +130,7 @@ InvestAPI provides three main endpoints. Interactive documentation is available 
    }
    ```
 
-3. **Steam Items**:
+3. **Steam items**
    ```bash
    curl http://localhost:8000/steam/730/Danger Zone Case
    ```
@@ -141,41 +147,111 @@ InvestAPI provides three main endpoints. Interactive documentation is available 
    }
    ```
 
+### Price history
+
+1. **Stocks / ETFs**
+   ```bash
+   curl "http://localhost:8000/stock/MSFT/history?days=3"
+   ```
+   Response:
+   ```json
+   {
+   "asset_type":"stock",
+   "name":"MSFT",
+   "full_name":"Microsoft Corporation",
+   "interval":"1d",
+   "points":[
+      {"timestamp":"2026-05-20T00:00:00","price":452.10,"volume":22150000.0},
+      {"timestamp":"2026-05-21T00:00:00","price":455.80,"volume":19830000.0},
+      {"timestamp":"2026-05-22T00:00:00","price":459.51,"volume":21400000.0}
+   ],
+   "source":"Yahoo Finance API",
+   "cached_at":"2026-05-23T12:00:00"
+   }
+   ```
+
+2. **Cryptocurrency**
+   ```bash
+   curl "http://localhost:8000/crypto/solana/history?days=3"
+   ```
+   Response:
+   ```json
+   {
+   "asset_type":"crypto",
+   "name":"solana",
+   "interval":"1d",
+   "points":[
+      {"timestamp":"2026-05-20T00:00:00","price":142.30,"volume":2100000000.0},
+      {"timestamp":"2026-05-21T00:00:00","price":143.15,"volume":1950000000.0},
+      {"timestamp":"2026-05-22T00:00:00","price":144.00,"volume":1880000000.0}
+   ],
+   "source":"Coin Gecko API",
+   "cached_at":"2026-05-23T12:00:00"
+   }
+   ```
+
+3. **Steam items**
+   ```bash
+   curl "http://localhost:8000/steam/730/Danger%20Zone%20Case/history?days=3"
+   ```
+   Response:
+   ```json
+   {
+   "asset_type":"steam",
+   "app_id":730,
+   "name":"Danger Zone Case",
+   "interval":"1d",
+   "points":[
+      {"timestamp":"2026-05-20T00:00:00","price":1.95,"volume":1250.0},
+      {"timestamp":"2026-05-21T00:00:00","price":1.97,"volume":1180.0},
+      {"timestamp":"2026-05-22T00:00:00","price":1.99,"volume":1320.0}
+   ],
+   "source":"Steam Market",
+   "cached_at":"2026-05-23T12:00:00"
+   }
+   ```
+
 ### Example in Python
 ```python
 import aiohttp
 
 API_BASE_URL = "http://127.0.0.1:8000"
 
-async def get_price(endpoint):
+async def get_spot_price(endpoint: str) -> float:
     async with aiohttp.ClientSession() as client:
-        url = f"{API_BASE_URL}/{endpoint}"
-        async with client.get(url) as response:
+        async with client.get(f"{API_BASE_URL}/{endpoint}") as response:
             response.raise_for_status()
-            data = await response.json()
-            return data.get("price")
+            return (await response.json())["price"]
 
-# Example usage
-price = await get_price("stock/AMD")
-print(f"AMD price: {price}")
+async def get_history(endpoint: str) -> list[dict]:
+    async with aiohttp.ClientSession() as client:
+        async with client.get(f"{API_BASE_URL}/{endpoint}") as response:
+            response.raise_for_status()
+            return (await response.json())["points"]
+
+# Spot
+price = await get_spot_price("stock/AMD")
+
+# History for a chart
+points = await get_history("crypto/solana/history?days=30")
 ```
 
 ### Error Handling
-If an asset is not found, the API returns a 404 error:
+If an asset is not found:
 ```json
 {
-   "error": "Not Found",
-   "detail": "Stock APPL not found"
+  "error": "Not Found",
+  "detail": "Stock APPL not found"
 }
 ```
 
 ### Rate Limits
-- No local rate limits (API runs on `localhost`).
-- External APIs (Yahoo Finance, CoinGecko, Steam) may have their own limits, but Redis caching minimizes their impact.
+- No built-in rate limits on the API itself.
+- External providers (Yahoo, CoinGecko, Steam) have their own limits; Redis caching reduces how often they are called.
 
 ## Configuration ⚙️
 
-To configure the API, create a `.env` file in the project root or set environment variables:
+Create a `.env` file in the project root:
 
 ```env
 LOG_LEVEL=INFO
@@ -186,82 +262,70 @@ API_RELOAD=TRUE
 
 REDIS_HOST=localhost
 REDIS_PORT=6379
-REDIS_PASSWORD=your_password # Optional
+REDIS_PASSWORD=
 
+# Spot price cache TTL (seconds)
 REDIS_STOCK_INTERVAL=900
 REDIS_CRYPTO_INTERVAL=300
-REDIS_STEAM_INVERVAL=600
+REDIS_STEAM_INTERVAL=900
+
+# History cache TTL (seconds)
+REDIS_STOCK_HISTORY_INTERVAL=86400
+REDIS_CRYPTO_HISTORY_INTERVAL=86400
+REDIS_STEAM_HISTORY_INTERVAL=86400
+
+# How much history to fetch from providers (before slicing by ?days=)
+CRYPTO_HISTORY_PERIOD=365
+STOCK_HISTORY_PERIOD=max
 ```
 
-Alternatively, you can manually configure settings in `redis_client.py`. When using Docker, environment variables are set in `docker-compose.yaml`:
-
-```yaml
-services:
-  investapi-api:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-    container_name: investapi
-    env_file:
-      - ../.env
-    environment:
-      REDIS_HOST: investapi_redis
-      REDIS_PORT: 6379
-    ports:
-      - "127.0.0.1:8000:8000"
-    depends_on:
-      - investapi-redis
-    restart: unless-stopped
-
-  investapi-redis:
-    image: redis:alpine
-    container_name: investapi_redis
-    restart: unless-stopped
-```
+With Docker, use `docker/docker-compose.yaml` and set `REDIS_HOST=investapi_redis` for the API service.
 
 ## Dependencies and Architecture 🏗️
 
 ### Dependencies
 
-- `dotenv` — for loading environment variables from `.env` files.
-- `uvicorn` — for running the FastAPI application server.
-- `fastapi` — for building the API.
-- `aiohttp` — for asynchronous external API requests.
-- `yfinance` — for fetching stock and ETF data.
-- `redis` — for Redis integration.
-- For testing (development only): `pytest`, `pytest-asyncio`, `httpx` — for running API endpoint tests.
+- `fastapi`, `uvicorn` — API server
+- `aiohttp` — async HTTP to CoinGecko and Steam
+- `yfinance` — stocks and history
+- `redis` — caching
+- `dotenv` — configuration
+- Dev: `pytest`, `pytest-asyncio`, `httpx`
 
 ### Architecture (Layered)
 
 ```
 app/
-├── routers/       # HTTP routes and dependencies
-├── schemas/       # Pydantic API models
-├── services/      # Business logic (fetch prices, cache orchestration)
-├── constants/     # Static reference data (e.g. crypto symbol map)
-├── utils/         # Shared helpers (HTTP error mapping)
-├── models.py      # Domain enums and cache TTL (ORM-ready)
-├── database.py    # Redis client (persistence layer)
-├── config.py      # Settings and logging
-└── main.py        # FastAPI app entry point
+├── routers/              # HTTP routes (spot + history)
+├── schemas/              # Pydantic models (asset_responses, history_responses)
+├── services/             # stock_price, stock_history, crypto_price, ...
+├── types/                # AssetType enum, crypto symbol map
+├── utils/                # history_points, steam_history_parser, errors
+├── database.py           # RedisClient (get_cache / set_cache)
+├── config.py             # Settings from .env
+└── main.py               # FastAPI app
 ```
 
-**Request flow** (`GET /stock/AMD`):
+**History request flow** (`GET /crypto/solana/history?days=30`):
 
-1. **Router** — validates input, injects Redis via `RedisDep`.
-2. **Service** — checks cache, calls Yahoo Finance if needed, stores result.
-3. **Database** — `RedisClient` get/set cache.
-4. **Schema** — `StockResponse` returned to the client.
+1. **Router** — validates `days`, injects Redis and `aiohttp` session.
+2. **Service** — reads `coin:history:solana` from Redis; on miss, fetches up to `CRYPTO_HISTORY_PERIOD` days from CoinGecko, normalizes to daily, stores full series.
+3. **Utils** — `filter_points_by_days` returns the last N days to the client.
+4. **Schema** — `CryptoHistoryResponse` with `points[]`.
 
-Run: `uv run uvicorn app.main:app --reload`
+The API works without Redis (no-cache mode) but repeating responses will be a lot slower.
 
-The API can function without Redis, but caching significantly improves performance.
+## Testing
 
-## License 📜 
+```bash
+uv run pytest -v
+```
+
+## License 📜
 
 This project is licensed under the MIT License. See the [License](LICENSE) file for details.
 
 ## Contact 📫
 
 - GitHub: [@Max2772](https://github.com/Max2772)
-- Email: [bib.maxim@gmail.com](mailto:bib.maxim@gmail.com)
+- Email: [max@bibikau.org](mailto:max@bibikau.org)

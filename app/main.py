@@ -43,9 +43,10 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="InvestAPI",
         description=(
-            "API for fetching real-time prices of stocks, cryptocurrencies, and Steam assets"
+            "API for fetching real-time prices and daily price history "
+            "of stocks, cryptocurrencies, and Steam assets"
         ),
-        version="1.2.0",
+        version="1.3.0",
         lifespan=lifespan,
     )
     application.include_router(router)
