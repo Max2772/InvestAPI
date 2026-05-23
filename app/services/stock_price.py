@@ -9,6 +9,27 @@ from app.utils import AssetNotFoundError, handle_error_exception
 from app.utils.logging import logger
 
 
+def _fetch_stock_price(ticker: str) -> StockResponse:
+    logger.info(f"Fetching stock data for {ticker} from {STOCK_PROVIDER_NAME}")
+    yf_ticker = yf.Ticker(ticker)
+    info = yf_ticker.info
+    if not info or "symbol" not in info:
+        raise AssetNotFoundError(f"Stock {ticker} not found")
+
+    stock_price = yf_ticker.fast_info.last_price
+    company_name = info.get("shortName")
+    if not stock_price or not company_name:
+        raise AssetNotFoundError(f"Stock {ticker} not found")
+
+    return StockResponse(
+        name=ticker,
+        full_name=company_name,
+        price=round(stock_price, 2),
+        currency="USD",
+        cached_at=datetime.now(),
+    )
+
+
 async def get_stock_price(
     ticker: str,
     redis_client: RedisClient | None,
@@ -22,24 +43,7 @@ async def get_stock_price(
             return cache
 
     try:
-        logger.info(f"Fetching stock data for {ticker} from Yahoo Finance")
-        yf_ticker = yf.Ticker(ticker)
-        info = yf_ticker.info
-        if not info or "symbol" not in info:
-            raise AssetNotFoundError(f"Stock {ticker} not found")
-
-        stock_price = yf_ticker.fast_info.last_price
-        company_name = info.get("shortName")
-        if not stock_price or not company_name:
-            raise AssetNotFoundError(f"Stock {ticker} not found")
-
-        response_data = StockResponse(
-            name=ticker,
-            full_name=company_name,
-            price=round(stock_price, 2),
-            currency="USD",
-            cached_at=datetime.now(),
-        )
+        response_data = _fetch_stock_price(ticker)
 
         if redis_client:
             await redis_client.set_cache(cache_key, response_data)
