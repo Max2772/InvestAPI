@@ -2,6 +2,15 @@
 
 ---
 
+### 🆕 v1.3.2
+
+#### ✨ New Features:
+* **Batch crypto spot prices** — `GET /crypto/{coins}` accepts a **comma-separated** list of CoinGecko **ids**, **symbols**, or **names** (e.g. `/crypto/bitcoin`, `/crypto/BTC,ETH,SOL`, `/crypto/bitcoin,ethereum,solana`). Response is `CryptoPricesResponse` with a `coins` array of `CryptoResponse` objects.
+* **Single CoinGecko fast price request per batch** — uncached coins from one bulk client request are fetched together via CoinGecko `simple/price?ids=...&vs_currencies=usd`.
+* **Background crypto cache warmer** — on app startup, a background task in `app/tasks/crypto_cache.py` runs every **15 minutes** (when Redis is available): one bulk request for the top **250** coins from `CRYPTO_COINS`, then writes each price to Redis under `coin:{id}`. First refresh runs **15 minutes after** startup (avoids external calls during tests).
+
+---
+
 ### 🆕 v1.3.1
 
 #### 🛠 Improvements:

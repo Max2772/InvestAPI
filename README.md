@@ -1,6 +1,6 @@
 # InvestAPI 📈
 
-![version](https://img.shields.io/badge/version-1.3.1-blue)
+![version](https://img.shields.io/badge/version-1.3.2-blue)
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com)
@@ -12,7 +12,8 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 **Key Features:**
 - 📊 Stock and ETF **spot prices** via `/stock/{ticker}` ([Yahoo Finance](https://finance.yahoo.com/) / `yfinance`).
 - 📈 Stock **history** via `/stock/{ticker}/history?days=90` (daily candles, `1d`).
-- 💰 Cryptocurrency **spot prices** via `/crypto/{coin}` ([CoinGecko](https://www.coingecko.com/)) — `{coin}` accepts **id**, **symbol**, or **name** (e.g. `the-open-network`, `TON`, `Toncoin`).
+- 💰 Cryptocurrency **spot prices** via `/crypto/{coins}` ([CoinGecko](https://www.coingecko.com/)) — comma-separated **ids**, **symbols**, or **names** (e.g. `solana`, `BTC,ETH`, `bitcoin,ethereum,solana`).
+- ⏱️ **Background crypto cache** — every 15 minutes the server prefetches spot prices for the top 250 coins from `CRYPTO_COINS` into Redis (`coin:{id}`), so `/crypto/<coin>` requests usually hit cache.
 - 📉 Crypto **history** via `/crypto/{coin}/history?days=30` (daily points, same aliases).
 - 🪙 Crypto responses expose **`name`** (CoinGecko id), **`symbol`** (ticker), and **`full_name`** (display name).
 - 🎮 Steam item **spot prices** via `/steam/{app_id}/{market_hash_name}` ([Steam Community Market](https://steamcommunity.com/market/)).
@@ -24,18 +25,12 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 
 ## [📦 Full Changelog](docs/ChangeLog.md)
 
-### 🆕 v1.3.1
+### 🆕 v1.3.2
 
-#### 🛠 Improvements:
-* **Crypto coin resolution** — `/crypto/{coin}` and `/crypto/{coin}/history` accept CoinGecko **id**, **symbol**, or **display name** (e.g. `/crypto/TON`, `/crypto/Toncoin`, `/crypto/the-open-network` → the same asset).
-* Replaced `CRYPTO_SYMBOLS` (`symbol → name`) with **`CRYPTO_COINS`** in `app/types/constants/crypto_symbols.py` — `(id, symbol, name)` tuples (~975 top coins by market cap).
-* Added **`resolve_crypto_coin()`** in `app/utils/crypto_parser.py` — maps any alias to `ResolvedCrypto(id, symbol, full_name)`; used by `crypto_price.py` and `crypto_history.py` instead of the old `.lower()` name hack.
-* Added new **Crypto response fields** (`CryptoResponse`, `CryptoHistoryResponse`):
-  - `name` — CoinGecko id (e.g. `the-open-network`), used in Redis keys (`coin:{id}`, `coin:history:{id}`)
-  - `symbol` — ticker (e.g. `TON`)
-  - `full_name` — display name (e.g. `Toncoin`)
-* Added **`tests/test_crypto_resolve.py`** for id/symbol/name resolution and slug fallback.
-
+#### ✨ New Features:
+* **Batch crypto spot prices** — `GET /crypto/{coins}` accepts a **comma-separated** list of CoinGecko **ids**, **symbols**, or **names** (e.g. `/crypto/bitcoin`, `/crypto/BTC,ETH,SOL`, `/crypto/bitcoin,ethereum,solana`). Response is `CryptoPricesResponse` with a `coins` array of `CryptoResponse` objects.
+* **Single CoinGecko fast price request per batch** — uncached coins from one bulk client request are fetched together via CoinGecko `simple/price?ids=...&vs_currencies=usd`.
+* **Background crypto cache warmer** — on app startup, a background task in `app/tasks/crypto_cache.py` runs every **15 minutes** (when Redis is available): one bulk request for the top **250** coins from `CRYPTO_COINS`, then writes each price to Redis under `coin:{id}`. First refresh runs **15 minutes after** startup (avoids external calls during tests).
 ---
 
 ## Installation 🛠️
@@ -105,22 +100,34 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
    }
    ```
 
-2. **Cryptocurrency**
+2. **Cryptocurrency** (one coin)
    ```bash
    curl http://localhost:8000/crypto/solana
    ```
    Response:
    ```json
    {
-   "asset_type":"crypto",
-   "price":144.0,
-   "currency":"USD",
-   "source":"CoinGecko",
-   "cached_at":"2026-01-15T14:57:40.364132",
-   "name": "solana",
-   "symbol": "SOL",
-   "full_name": "Solana"
+   "coins": [
+      {
+         "asset_type": "crypto",
+         "price": 144.0,
+         "currency": "USD",
+         "source": "Coin Gecko API",
+         "cached_at": "2026-01-15T14:57:40.364132",
+         "name": "solana",
+         "symbol": "SOL",
+         "full_name": "Solana"
+      }
+   ]
    }
+   ```
+
+   **Several coins in one request:**
+   ```bash
+   curl "http://localhost:8000/crypto/bitcoin,ethereum,solana"
+   ```
+   ```bash
+   curl "http://localhost:8000/crypto/BTC,ETH,SOL"
    ```
 
 3. **Steam items**
@@ -216,7 +223,10 @@ async def get_spot_price(endpoint: str) -> float:
     async with aiohttp.ClientSession() as client:
         async with client.get(f"{API_BASE_URL}/{endpoint}") as response:
             response.raise_for_status()
-            return (await response.json())["price"]
+            payload = await response.json()
+            if "coins" in payload:
+                return payload["coins"][0]["price"]
+            return payload["price"]
 
 async def get_history(endpoint: str) -> list[dict]:
     async with aiohttp.ClientSession() as client:
@@ -226,6 +236,15 @@ async def get_history(endpoint: str) -> list[dict]:
 
 # Spot
 price = await get_spot_price("stock/AMD")
+
+# Crypto batch (returns list under "coins")
+async def get_crypto_prices(coins: str) -> list[dict]:
+    async with aiohttp.ClientSession() as client:
+        async with client.get(f"{API_BASE_URL}/crypto/{coins}") as response:
+            response.raise_for_status()
+            return (await response.json())["coins"]
+
+btc_eth = await get_crypto_prices("bitcoin,ethereum")
 
 # History for a chart (symbol, name, or id all work)
 points = await get_history("crypto/TON/history?days=30")
@@ -294,12 +313,25 @@ app/
 ├── routers/              # HTTP routes (spot + history)
 ├── schemas/              # Pydantic models (asset_responses, history_responses)
 ├── services/             # stock_price, stock_history, crypto_price, ...
+├── tasks/                # crypto_cache.py — 15 min bulk CoinGecko → Redis
 ├── types/constants/      # CRYPTO_COINS registry (id, symbol, name)
 ├── utils/                # crypto_parser, history_points, steam_history_parser, errors
 ├── database.py           # RedisClient (get_cache / set_cache)
 ├── config.py             # Settings from .env
-└── main.py               # FastAPI app
+└── main.py               # FastAPI app + background cache task lifecycle
 ```
+
+**Crypto spot request flow** (`GET /crypto/BTC,ETH`):
+
+1. **Router** — passes comma-separated `coins` to `get_crypto_prices()`.
+2. **`crypto_parser`** — `resolve_crypto_coins()` → list of `ResolvedCrypto`, deduplicated by id.
+3. **Service** — reads `coin:{id}` from Redis per coin; on miss, one CoinGecko `simple/price?ids=...` for all missing ids, then caches each result.
+4. **Schema** — `CryptoPricesResponse` with ordered `coins[]`.
+
+**Background cache** (every 15 min, if Redis is up):
+
+1. **`crypto_cache_refresh_loop`** in `app/tasks/crypto_cache.py` — bulk `simple/price` for top 250 ids from `CRYPTO_COINS`.
+2. Writes `coin:{id}` entries so client requests often skip CoinGecko entirely.
 
 **History request flow** (`GET /crypto/TON/history?days=30`):
 

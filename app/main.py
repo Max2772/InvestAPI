@@ -29,20 +29,24 @@ async def lifespan(app: FastAPI):
 
     app.state.http_session = aiohttp.ClientSession()
 
-    crypto_cache_task = asyncio.create_task(
-        crypto_cache_refresh_loop(
-            redis_client=app.state.redis_client,
-            http_session=app.state.http_session,
+    crypto_cache_task: asyncio.Task | None = None
+    if app.state.redis_client is not None:
+        crypto_cache_task = asyncio.create_task(
+            crypto_cache_refresh_loop(
+                redis_client=app.state.redis_client,
+                http_session=app.state.http_session,
+            )
         )
-    )
 
     yield
 
-    crypto_cache_task.cancel()
-    try:
-        await asyncio.gather(crypto_cache_task, return_exceptions=True)
-    except Exception:
-        pass
+    if crypto_cache_task is not None:
+        crypto_cache_task.cancel()
+
+        await asyncio.gather(
+            crypto_cache_task,
+            return_exceptions=True,
+        )
 
     await app.state.http_session.close()
 
