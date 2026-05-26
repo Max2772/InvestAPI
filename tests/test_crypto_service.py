@@ -15,6 +15,8 @@ async def test_crypto_success(fake_http_session):
 
     assert isinstance(result, CryptoResponse)
     assert result.name == "solana"
+    assert result.symbol == "SOL"
+    assert result.full_name == "Solana"
     assert result.price == 145.57
 
 
@@ -26,6 +28,8 @@ async def test_crypto_symbol_alias(fake_http_session):
 
     assert isinstance(result, CryptoResponse)
     assert result.name == "solana"
+    assert result.symbol == "SOL"
+    assert result.full_name == "Solana"
 
 
 @pytest.mark.asyncio

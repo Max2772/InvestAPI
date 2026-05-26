@@ -28,6 +28,8 @@ async def test_crypto_history_success(fake_http_session):
 
     assert isinstance(result, CryptoHistoryResponse)
     assert result.name == "solana"
+    assert result.symbol == "SOL"
+    assert result.full_name == "Solana"
     assert result.interval == "1d"
     assert len(result.points) == 2
     assert result.points[0].price == 145.5
@@ -67,6 +69,7 @@ async def test_crypto_history_symbol_alias(fake_http_session):
     result = await get_crypto_history("SOL", 7, None, session)
 
     assert result.name == "solana"
+    assert result.symbol == "SOL"
 
 
 @pytest.mark.asyncio
@@ -87,6 +90,8 @@ async def test_crypto_history_cache_hit_without_http(
     recent_ts = datetime.now() - timedelta(days=5)
     cached = CryptoHistoryResponse(
         name="solana",
+        symbol="SOL",
+        full_name="Solana",
         interval="1d",
         points=[
             HistoryPoint(timestamp=old_ts, price=100.0, volume=1.0),

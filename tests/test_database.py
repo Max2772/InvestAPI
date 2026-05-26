@@ -33,6 +33,8 @@ async def test_get_cache_invalid_payload(redis_client):
 async def test_get_cache_crypto_and_steam(redis_client):
     crypto = CryptoResponse(
         name="bitcoin",
+        symbol="BTC",
+        full_name="Bitcoin",
         price=1.0,
         currency="USD",
         source="CoinGecko",

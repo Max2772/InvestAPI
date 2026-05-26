@@ -27,6 +27,8 @@ class StockHistoryResponse(BaseModel):
 class CryptoHistoryResponse(BaseModel):
     asset_type: AssetType = AssetType.CRYPTO
     name: str
+    symbol: str
+    full_name: str
     interval: str = DAILY_INTERVAL
     points: list[HistoryPoint] = Field(default_factory=list)
     source: str = CRYPTO_PROVIDER_NAME

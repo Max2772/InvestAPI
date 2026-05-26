@@ -23,6 +23,8 @@ class CryptoResponse(BaseAssetResponse):
     asset_type: AssetType = AssetType.CRYPTO
     source: str = CRYPTO_PROVIDER_NAME
     name: str
+    symbol: str
+    full_name: str
 
 
 class SteamResponse(BaseAssetResponse):

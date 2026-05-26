@@ -55,6 +55,8 @@ def sample_stock() -> StockResponse:
 def sample_crypto() -> CryptoResponse:
     return CryptoResponse(
         name="solana",
+        symbol="SOL",
+        full_name="Solana",
         price=145.5,
         currency="USD",
         source="CoinGecko",
@@ -83,6 +85,8 @@ def sample_stock_history() -> StockHistoryResponse:
 def sample_crypto_history() -> CryptoHistoryResponse:
     return CryptoHistoryResponse(
         name="solana",
+        symbol="SOL",
+        full_name="Solana",
         points=[HistoryPoint(timestamp=FIXED_TIME, price=145.5, volume=1_000_000.0)],
         cached_at=FIXED_TIME,
     )

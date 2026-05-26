@@ -5,23 +5,35 @@ from app.utils.crypto_parser import resolve_crypto_coin
 
 
 def test_resolve_by_symbol():
-    assert resolve_crypto_coin("TON") == "the-open-network"
+    coin = resolve_crypto_coin("TON")
+    assert coin.id == "the-open-network"
+    assert coin.symbol == "TON"
+    assert coin.full_name == "Toncoin"
 
 
 def test_resolve_by_name():
-    assert resolve_crypto_coin("Toncoin") == "the-open-network"
+    coin = resolve_crypto_coin("Toncoin")
+    assert coin.id == "the-open-network"
 
 
 def test_resolve_by_id():
-    assert resolve_crypto_coin("the-open-network") == "the-open-network"
+    coin = resolve_crypto_coin("the-open-network")
+    assert coin.id == "the-open-network"
+    assert coin.symbol == "TON"
 
 
 def test_resolve_by_symbol_sol():
-    assert resolve_crypto_coin("SOL") == "solana"
+    coin = resolve_crypto_coin("SOL")
+    assert coin.id == "solana"
+    assert coin.symbol == "SOL"
+    assert coin.full_name == "Solana"
 
 
 def test_resolve_unknown_slug_fallback():
-    assert resolve_crypto_coin("some-new-coin") == "some-new-coin"
+    coin = resolve_crypto_coin("some-new-coin")
+    assert coin.id == "some-new-coin"
+    assert coin.symbol == "SOME-NEW-COIN"
+    assert coin.full_name == "some-new-coin"
 
 
 def test_resolve_not_found():
