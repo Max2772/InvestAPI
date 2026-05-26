@@ -5,8 +5,8 @@ import aiohttp
 from app.config import CRYPTO_HISTORY_PERIOD, REDIS_CRYPTO_HISTORY_INTERVAL, CRYPTO_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas.history_responses import CryptoHistoryResponse, HistoryPoint
-from app.types.constants import CRYPTO_SYMBOLS
 from app.utils import AssetNotFoundError, handle_error_exception
+from app.utils.crypto_parser import resolve_crypto_coin
 from app.utils.history_points import (
     collapse_to_daily,
     filter_points_by_days,
@@ -78,7 +78,7 @@ async def get_crypto_history(
     redis_client: RedisClient | None,
     http_session: aiohttp.ClientSession,
 ) -> CryptoHistoryResponse:
-    coin = CRYPTO_SYMBOLS.get(coin.upper(), coin).lower()
+    coin = resolve_crypto_coin(coin)
     cache_key = f"coin:history:{coin}"
 
     if redis_client:

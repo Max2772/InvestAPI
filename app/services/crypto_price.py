@@ -5,8 +5,8 @@ import aiohttp
 from app.config import CRYPTO_PROVIDER_NAME, REDIS_CRYPTO_INTERVAL
 from app.database import RedisClient
 from app.schemas import CryptoResponse
-from app.types.constants import CRYPTO_SYMBOLS
 from app.utils import AssetNotFoundError, handle_error_exception
+from app.utils.crypto_parser import resolve_crypto_coin
 from app.utils.logging import logger
 
 
@@ -45,7 +45,7 @@ async def get_crypto_price(
     redis_client: RedisClient | None,
     http_session: aiohttp.ClientSession,
 ) -> CryptoResponse:
-    coin = CRYPTO_SYMBOLS.get(coin.upper(), coin).lower()
+    coin = resolve_crypto_coin(coin)
     cache_key = f"coin:{coin}"
 
     if redis_client:
