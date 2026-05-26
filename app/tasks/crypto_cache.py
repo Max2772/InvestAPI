@@ -7,6 +7,7 @@ from app.config import REDIS_CRYPTO_INTERVAL, CRYPTO_PROVIDER_NAME
 from app.database import RedisClient
 from app.schemas import CryptoResponse
 from app.types.constants.crypto_symbols import CRYPTO_COINS
+from app.utils.crypto_parser import resolve_crypto_coin
 from app.utils.logging import logger
 
 CRYPTO_CACHE_REFRESH_SECONDS = 15 * 60
@@ -35,8 +36,7 @@ async def _refresh_crypto_cache_once(
     ttl = max(REDIS_CRYPTO_INTERVAL, CRYPTO_CACHE_REFRESH_SECONDS)
     cached_at = datetime.now()
 
-    for coin_id, coin in data.items():
-        coin_data = data.get(coin_id)
+    for coin_id, coin_data in data.items():
         if not coin_data or "usd" not in coin_data:
             continue
 
@@ -44,12 +44,14 @@ async def _refresh_crypto_cache_once(
         if price is None or not isinstance(price, (int, float)):
             continue
 
+        resolved = resolve_crypto_coin(coin_id)
+
         await redis_client.set_cache(
             f"coin:{coin_id}",
             CryptoResponse(
-                name=coin.id,
-                symbol=coin.symbol,
-                full_name=coin.full_name,
+                name=resolved.id,
+                symbol=resolved.symbol,
+                full_name=resolved.full_name,
                 price=round(price, 2),
                 cached_at=cached_at,
             ),
