@@ -5,11 +5,13 @@
 ### 🆕 v1.3.1
 
 #### 🛠 Improvements:
-* **Crypto coin resolution** for CoinGecko — `/crypto/{coin}` and `/crypto/{coin}/history` now accept **id**, **symbol**, or **display name** (e.g. `TON`, `Toncoin`, and `the-open-network` map to the same coin).
-* Replaced `CRYPTO_SYMBOLS` (`symbol → name`) with **`CRYPTO_COINS`** — tuples of `(coingecko_id, symbol, name)` in `app/types/constants/crypto_symbols.py` (~975 entries from the top markets list).
-* Added **`resolve_crypto_coin()`** in `app/utils/crypto_parser.py` — builds indexes at import and returns the CoinGecko id used in API URLs and Redis keys (`coin:{id}`, `coin:history:{id}`).
-* Added **`scripts/refresh_crypto_symbols.py`** — one-off merge from CoinGecko `GET /coins/markets` (market cap desc, 4×250 rows); keeps local entries missing from the API response.
-* Updated `crypto_price.py` and `crypto_history.py` to use `resolve_crypto_coin()` instead of the old `.lower()` name hack.
+* **Crypto coin resolution** — `/crypto/{coin}` and `/crypto/{coin}/history` accept CoinGecko **id**, **symbol**, or **display name** (e.g. `/crypto/TON`, `/crypto/Toncoin`, `/crypto/the-open-network` → the same asset).
+* Replaced `CRYPTO_SYMBOLS` (`symbol → name`) with **`CRYPTO_COINS`** in `app/types/constants/crypto_symbols.py` — `(id, symbol, name)` tuples (~975 top coins by market cap).
+* Added **`resolve_crypto_coin()`** in `app/utils/crypto_parser.py` — maps any alias to `ResolvedCrypto(id, symbol, full_name)`; used by `crypto_price.py` and `crypto_history.py` instead of the old `.lower()` name hack.
+* Added new **Crypto response fields** (`CryptoResponse`, `CryptoHistoryResponse`):
+  - `name` — CoinGecko id (e.g. `the-open-network`), used in Redis keys (`coin:{id}`, `coin:history:{id}`)
+  - `symbol` — ticker (e.g. `TON`)
+  - `full_name` — display name (e.g. `Toncoin`)
 * Added **`tests/test_crypto_resolve.py`** for id/symbol/name resolution and slug fallback.
 
 ---
