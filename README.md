@@ -1,6 +1,6 @@
 # InvestAPI 📈
 
-![version](https://img.shields.io/badge/version-1.3.0-blue)
+![version](https://img.shields.io/badge/version-1.3.1-blue)
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com)
@@ -23,27 +23,14 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 
 ## [📦 Full Changelog](docs/ChangeLog.md)
 
-### 🆕 v1.3.0
-
-#### ✨ New Features:
-* **Price history endpoints** for building charts (daily interval `1d`):
-  - `GET /stock/{ticker}/history?days=90` — Yahoo Finance via `yfinance` (`period=max`, sliced by `days`)
-  - `GET /crypto/{coin}/history?days=30` — CoinGecko `market_chart` (full period cached, sliced by `days`)
-  - `GET /steam/{app_id}/{market_hash_name}/history?days=90` — parsed from Steam Market listing HTML
-* New schemas: `HistoryPoint`, `StockHistoryResponse`, `CryptoHistoryResponse`, `SteamHistoryResponse` in `app/schemas/history_responses.py`.
-* Steam history parser (`app/utils/steam_history_parser.py`): supports legacy `var line1=...` and modern SSR embedded price data (`time`, `price_median`, `purchases`).
-* Shared helpers in `app/utils/history_points.py`: `filter_points_by_days`, `collapse_to_daily`.
+### 🆕 v1.3.1
 
 #### 🛠 Improvements:
-* **Smart history caching** — one “max” dataset per asset in Redis, client `days` only filters the response:
-  - `coin:history:{coin}` (CoinGecko, default 365 days)
-  - `stock:history:{ticker}` (yfinance `max`)
-  - `steam:history:{app_id}:{market_hash_name}` (full parsed history)
-* Simplified `RedisClient`: universal `get_cache(key, model_cls)` and `set_cache(key, model, ttl)` with direct Pydantic JSON (removed `{asset_type, data}` wrapper).
-* Split price services: `stock_price.py`, `crypto_price.py`, `steam_price.py`; history: `stock_history.py`, `crypto_history.py`, `steam_history.py`.
-* Provider names and history settings centralized in `app/config.py` (`STOCK_PROVIDER_NAME`, `CRYPTO_HISTORY_PERIOD`, `STOCK_HISTORY_PERIOD`, `REDIS_*_HISTORY_INTERVAL`, etc.).
-* Expanded test suite for history services, Steam HTML parser, and cache slicing.
-
+* **Crypto coin resolution** for CoinGecko — `/crypto/{coin}` and `/crypto/{coin}/history` now accept **id**, **symbol**, or **display name** (e.g. `TON`, `Toncoin`, and `the-open-network` map to the same coin).
+* Replaced `CRYPTO_SYMBOLS` (`symbol → name`) with **`CRYPTO_COINS`** — tuples of `(coingecko_id, symbol, name)` in `app/types/constants/crypto_symbols.py` (~975 entries from the top markets list).
+* Added **`resolve_crypto_coin()`** in `app/utils/crypto_parser.py` — builds indexes at import and returns the CoinGecko id used in API URLs and Redis keys (`coin:{id}`, `coin:history:{id}`).
+* Updated `crypto_price.py` and `crypto_history.py` to use `resolve_crypto_coin()` instead of the old `.lower()` name hack.
+* Added **`tests/test_crypto_resolve.py`** for id/symbol/name resolution and slug fallback.
 
 ---
 
@@ -299,8 +286,8 @@ app/
 ├── routers/              # HTTP routes (spot + history)
 ├── schemas/              # Pydantic models (asset_responses, history_responses)
 ├── services/             # stock_price, stock_history, crypto_price, ...
-├── types/                # AssetType enum, crypto symbol map
-├── utils/                # history_points, steam_history_parser, errors
+├── types/constants/      # CRYPTO_COINS registry (id, symbol, name)
+├── utils/                # crypto_parser, history_points, steam_history_parser, errors
 ├── database.py           # RedisClient (get_cache / set_cache)
 ├── config.py             # Settings from .env
 └── main.py               # FastAPI app
