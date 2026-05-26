@@ -4,7 +4,7 @@ from starlette.responses import RedirectResponse
 from app.routers.dependencies import HttpSessionDep, RedisDep
 from app.schemas import (
     StockResponse,
-    CryptoResponse,
+    CryptoPricesResponse,
     SteamResponse,
     StockHistoryResponse,
     CryptoHistoryResponse,
@@ -12,7 +12,7 @@ from app.schemas import (
 )
 from app.services import (
     get_stock_price,
-    get_crypto_price,
+    get_crypto_prices,
     get_steam_item_price,
     get_stock_history,
     get_crypto_history,
@@ -52,17 +52,22 @@ async def stock_history(
 
 
 @router.get(
-    "/crypto/{coin}",
-    response_model=CryptoResponse,
+    "/crypto/{coins}",
+    response_model=CryptoPricesResponse,
     tags=["Crypto"],
-    summary="Get crypto price",
+    summary="Get crypto prices",
+    description=(
+        "Fetch spot prices for one or more cryptocurrencies. "
+        "Pass comma-separated CoinGecko ids, symbols, or names "
+        "(e.g. `bitcoin`, `BTC`, `bitcoin,ethereum,solana`)."
+    ),
 )
 async def crypto_price(
-        coin: str,
-        redis_client: RedisDep,
-        http_session: HttpSessionDep
+    coins: str,
+    redis_client: RedisDep,
+    http_session: HttpSessionDep,
 ):
-    return await get_crypto_price(coin, redis_client, http_session)
+    return await get_crypto_prices(coins, redis_client, http_session)
 
 
 @router.get(

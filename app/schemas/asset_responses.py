@@ -27,6 +27,10 @@ class CryptoResponse(BaseAssetResponse):
     full_name: str
 
 
+class CryptoPricesResponse(BaseModel):
+    coins: list[CryptoResponse]
+
+
 class SteamResponse(BaseAssetResponse):
     asset_type: AssetType = AssetType.STEAM
     source: str = STEAM_PROVIDER_NAME

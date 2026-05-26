@@ -55,3 +55,19 @@ def resolve_crypto_coin(query: str) -> ResolvedCrypto:
         return _from_id(lowered)
 
     raise AssetNotFoundError(f"Cryptocurrency {query} not found")
+
+
+def resolve_crypto_coins(queries: str) -> list[ResolvedCrypto]:
+    parts = [part.strip() for part in queries.split(",") if part.strip()]
+    if not parts:
+        raise AssetNotFoundError("Cryptocurrency identifier is empty")
+
+    seen: set[str] = set()
+    resolved: list[ResolvedCrypto] = []
+    for part in parts:
+        coin = resolve_crypto_coin(part)
+        if coin.id in seen:
+            continue
+        seen.add(coin.id)
+        resolved.append(coin)
+    return resolved

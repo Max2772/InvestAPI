@@ -1,7 +1,7 @@
 import pytest
 
 from app.utils import AssetNotFoundError
-from app.utils.crypto_parser import resolve_crypto_coin
+from app.utils.crypto_parser import resolve_crypto_coin, resolve_crypto_coins
 
 
 def test_resolve_by_symbol():
@@ -39,3 +39,14 @@ def test_resolve_unknown_slug_fallback():
 def test_resolve_not_found():
     with pytest.raises(AssetNotFoundError):
         resolve_crypto_coin("!!!")
+
+
+def test_resolve_multiple_coins():
+    coins = resolve_crypto_coins("bitcoin,ETH,Solana")
+    assert [c.id for c in coins] == ["bitcoin", "ethereum", "solana"]
+
+
+def test_resolve_multiple_deduplicates():
+    coins = resolve_crypto_coins("solana,SOL")
+    assert len(coins) == 1
+    assert coins[0].id == "solana"

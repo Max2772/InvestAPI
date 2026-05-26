@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import asyncio
 
 import aiohttp
 import uvicorn
@@ -10,6 +11,7 @@ from app.database import RedisClient
 from app.routers import router
 from app.utils.exceptions import AssetNotFoundError, ExternalServiceError
 from app.utils.logging import logger
+from app.tasks.crypto_cache import crypto_cache_refresh_loop
 
 
 @asynccontextmanager
@@ -27,7 +29,20 @@ async def lifespan(app: FastAPI):
 
     app.state.http_session = aiohttp.ClientSession()
 
+    crypto_cache_task = asyncio.create_task(
+        crypto_cache_refresh_loop(
+            redis_client=app.state.redis_client,
+            http_session=app.state.http_session,
+        )
+    )
+
     yield
+
+    crypto_cache_task.cancel()
+    try:
+        await asyncio.gather(crypto_cache_task, return_exceptions=True)
+    except Exception:
+        pass
 
     await app.state.http_session.close()
 

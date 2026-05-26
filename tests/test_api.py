@@ -6,7 +6,7 @@ import pytest
 from app.types.enums.enums import AssetType
 from app.utils import AssetNotFoundError
 from app.schemas import (
-    CryptoResponse,
+    CryptoPricesResponse,
     StockResponse,
     SteamResponse,
     StockHistoryResponse,
@@ -97,17 +97,20 @@ async def test_crypto_history_endpoint_returns_service_result(
 
 @pytest.mark.asyncio
 async def test_crypto_endpoint_returns_service_result(client, monkeypatch, sample_crypto):
+    from app.schemas import CryptoPricesResponse
+
     monkeypatch.setattr(
-        "app.routers.assets.get_crypto_price",
-        AsyncMock(return_value=sample_crypto),
+        "app.routers.assets.get_crypto_prices",
+        AsyncMock(return_value=CryptoPricesResponse(coins=[sample_crypto])),
     )
 
     response = await client.get("/crypto/solana")
 
     assert response.status_code == 200
-    crypto = CryptoResponse.model_validate(response.json())
-    assert crypto.name == "solana"
-    assert crypto.asset_type == AssetType.CRYPTO
+    payload = CryptoPricesResponse.model_validate(response.json())
+    assert len(payload.coins) == 1
+    assert payload.coins[0].name == "solana"
+    assert payload.coins[0].asset_type == AssetType.CRYPTO
 
 
 @pytest.mark.asyncio
