@@ -1,6 +1,6 @@
 # InvestAPI 📈
 
-![version](https://img.shields.io/badge/version-1.3.2-blue)
+![version](https://img.shields.io/badge/version-1.3.3-blue)
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com)
@@ -18,6 +18,7 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 - 🪙 Crypto responses expose **`name`** (CoinGecko id), **`symbol`** (ticker), and **`full_name`** (display name).
 - 🎮 Steam item **spot prices** via `/steam/{app_id}/{market_hash_name}` ([Steam Community Market](https://steamcommunity.com/market/)).
 - 📊 Steam item **history** via `/steam/{app_id}/{market_hash_name}/history?days=90` (parsed from listing page HTML).
+- 🔍 **Asset search** via `GET /search?q=...` — autocomplete over stocks, crypto, and Steam (CS2, TF2); optional `type` filter and relevance ranking.
 - 🚀 Redis caching with “fetch max once, slice by `days`” for history endpoints.
 - 🌐 Async HTTP via `aiohttp` for crypto and Steam.
 
@@ -25,13 +26,17 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 
 ## [📦 Full Changelog](docs/ChangeLog.md)
 
-### 🆕 v1.3.2
+
+### 🆕 v1.3.3
 
 #### ✨ New Features:
-* **Batch crypto spot prices** — `GET /crypto/{coins}` accepts a **comma-separated** list of CoinGecko **ids**, **symbols**, or **names** (e.g. `/crypto/bitcoin`, `/crypto/BTC,ETH,SOL`, `/crypto/bitcoin,ethereum,solana`). Response is `CryptoPricesResponse` with a `coins` array of `CryptoResponse` objects.
-* **Single CoinGecko fast price request per batch** — uncached coins from one bulk client request are fetched together via CoinGecko `simple/price?ids=...&vs_currencies=usd`.
-* **Background crypto cache warmer** — on app startup, a background task in `app/tasks/crypto_cache.py` runs every **15 minutes** (when Redis is available): one bulk request for the top **250** coins from `CRYPTO_COINS`, then writes each price to Redis under `coin:{id}`. First refresh runs **15 minutes after** startup (avoids external calls during tests).
----
+* **`GET /search`** — autocomplete-style asset lookup by ticker, symbol, or name fragment. Query params: `q` (required), optional `type` (`stock` | `crypto` | `steam`), `limit` (default 20, max 50). Results are scored and sorted by relevance (prefix on ticker/symbol first, then substring in names). No Redis — in-memory search over static catalogs.
+* **Search response models** in `app/schemas/search_responses.py` — discriminated hits: `StockSearchHit`, `CryptoSearchHit` (`name`, `symbol`, `full_name`), `SteamSearchHit` (`name`, `class_id`).
+* **Asset catalogs** for search:
+  - `STOCK_TICKERS` — `app/types/constants/stock_tickers.py` (ticker → company name)
+  - `STEAM_NAMES` — `app/types/constants/steam_names.py` (CS2 & TF2 market hash names)
+  - `CRYPTO_COINS` — existing registry, also used by search
+* **`app/services/asset_search.py`** and tests in `tests/test_asset_search.py`.
 
 ## Installation 🛠️
 
@@ -80,6 +85,33 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 5. Open `http://localhost:8000/docs` for interactive API documentation.
 
 ## Usage 📝
+
+### Asset search
+
+```bash
+curl "http://localhost:8000/search?q=aap&type=stock&limit=10"
+curl "http://localhost:8000/search?q=sol&type=crypto"
+curl "http://localhost:8000/search?q=glove&type=steam"
+```
+
+Response:
+```json
+{
+  "query": "aap",
+  "results": [
+    {
+      "asset_type": "stock",
+      "name": "AAPG",
+      "full_name": "Ascentage Pharma Group International American Depository Shares"
+    },
+    {
+      "asset_type": "stock",
+      "name": "AAPL",
+      "full_name": "Apple Inc. Common Stock"
+    }
+  ]
+}
+```
 
 ### Spot prices
 
@@ -310,11 +342,11 @@ With Docker, use `docker/docker-compose.yaml` and set `REDIS_HOST=investapi_redi
 
 ```
 app/
-├── routers/              # HTTP routes (spot + history)
-├── schemas/              # Pydantic models (asset_responses, history_responses)
-├── services/             # stock_price, stock_history, crypto_price, ...
+├── routers/              # HTTP routes (spot + history + search)
+├── schemas/              # Pydantic models (asset_responses, history_responses, search_responses)
+├── services/             # stock_price, stock_history, crypto_price, asset_search, ...
 ├── tasks/                # crypto_cache.py — 15 min bulk CoinGecko → Redis
-├── types/constants/      # CRYPTO_COINS registry (id, symbol, name)
+├── types/constants/      # STOCK_TICKERS, CRYPTO_COINS, STEAM_NAMES
 ├── utils/                # crypto_parser, history_points, steam_history_parser, errors
 ├── database.py           # RedisClient (get_cache / set_cache)
 ├── config.py             # Settings from .env

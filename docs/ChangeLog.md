@@ -2,6 +2,19 @@
 
 ---
 
+### 🆕 v1.3.3
+
+#### ✨ New Features:
+* **`GET /search`** — autocomplete-style asset lookup by ticker, symbol, or name fragment. Query params: `q` (required), optional `type` (`stock` | `crypto` | `steam`), `limit` (default 20, max 50). Results are scored and sorted by relevance (prefix on ticker/symbol first, then substring in names). No Redis — in-memory search over static catalogs.
+* **Search response models** in `app/schemas/search_responses.py` — discriminated hits: `StockSearchHit`, `CryptoSearchHit` (`name`, `symbol`, `full_name`), `SteamSearchHit` (`name`, `class_id`).
+* **Asset catalogs** for search:
+  - `STOCK_TICKERS` — `app/types/constants/stock_tickers.py` (ticker → company name)
+  - `STEAM_NAMES` — `app/types/constants/steam_names.py` (CS2 & TF2 market hash names)
+  - `CRYPTO_COINS` — existing registry, also used by search
+* **`app/services/asset_search.py`** and tests in `tests/test_asset_search.py`.
+
+---
+
 ### 🆕 v1.3.2
 
 #### ✨ New Features:
