@@ -11,6 +11,13 @@ from app.schemas.history_responses import (
     SteamHistoryResponse,
     StockHistoryResponse,
 )
+from app.schemas.search_responses import (
+    CryptoSearchHit,
+    SearchHit,
+    SearchResponse,
+    SteamSearchHit,
+    StockSearchHit,
+)
 
 __all__ = [
     "BaseAssetResponse",
@@ -22,4 +29,9 @@ __all__ = [
     "StockHistoryResponse",
     "CryptoHistoryResponse",
     "SteamHistoryResponse",
+    "CryptoSearchHit",
+    "SearchHit",
+    "SearchResponse",
+    "SteamSearchHit",
+    "StockSearchHit",
 ]

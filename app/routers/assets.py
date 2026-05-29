@@ -9,6 +9,7 @@ from app.schemas import (
     StockHistoryResponse,
     CryptoHistoryResponse,
     SteamHistoryResponse,
+    SearchResponse,
 )
 from app.services import (
     get_stock_price,
@@ -17,7 +18,9 @@ from app.services import (
     get_stock_history,
     get_crypto_history,
     get_steam_item_history,
+    get_asset_search,
 )
+from app.types.enums.enums import AssetType
 
 router = APIRouter()
 
@@ -25,6 +28,33 @@ router = APIRouter()
 @router.get("/")
 async def index():
     return RedirectResponse(url="/docs")
+
+
+@router.get(
+    "/search",
+    response_model=SearchResponse,
+    tags=["Search"],
+    summary="Search assets by name",
+    description=(
+        "Autocomplete-style search over known **stocks, cryptocurrencies**, and **Steam items (CS2, TF2)**. "
+        "Use the optional `type` query parameter to limit results to one asset category."
+    ),
+)
+async def search(
+    q: str = Query(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Search text (ticker, symbol, or name fragment)",
+    ),
+    asset_type: AssetType | None = Query(
+        None,
+        alias="type",
+        description="Limit search to stock, crypto, or steam",
+    ),
+    limit: int = Query(20, ge=1, le=50, description="Maximum number of results"),
+):
+    return await get_asset_search(q, asset_type, limit)
 
 
 @router.get(
