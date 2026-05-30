@@ -80,7 +80,7 @@ def _search_crypto(query: str) -> list[tuple[int, str, CryptoSearchHit]]:
 def _search_steam(query: str) -> list[tuple[int, str, SteamSearchHit]]:
     ranked: list[tuple[int, str, SteamSearchHit]] = []
 
-    for name, class_id in STEAM_NAMES.items():
+    for name, (app_id, class_id) in STEAM_NAMES.items():
         score = _match_score(query, name)
         if score is None:
             continue
@@ -88,7 +88,7 @@ def _search_steam(query: str) -> list[tuple[int, str, SteamSearchHit]]:
             (
                 score,
                 name.casefold(),
-                SteamSearchHit(name=name, class_id=class_id),
+                SteamSearchHit(name=name, app_id=app_id, class_id=class_id),
             )
         )
 

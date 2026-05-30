@@ -21,6 +21,7 @@ class CryptoSearchHit(BaseModel):
 class SteamSearchHit(BaseModel):
     asset_type: Literal[AssetType.STEAM.value] = AssetType.STEAM.value
     name: str
+    app_id: int
     class_id: int
 
 
