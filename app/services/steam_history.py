@@ -12,14 +12,6 @@ from app.utils.history_points import collapse_to_daily, filter_points_by_days
 from app.utils.logging import logger
 from app.utils.steam_history_parser import parse_steam_listing_html
 
-STEAM_LISTING_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    ),
-    "Accept-Language": "en-US,en;q=0.9",
-}
-
 
 def _slice_cached(
         cached: SteamHistoryResponse,
@@ -51,7 +43,7 @@ async def _fetch_history(
         f"from {STEAM_PROVIDER_NAME} listing page"
     )
 
-    async with http_session.get(url, headers=STEAM_LISTING_HEADERS) as response:
+    async with http_session.get(url) as response:
         html = await response.text()
         response.raise_for_status()
 
