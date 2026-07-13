@@ -1,6 +1,6 @@
 # InvestAPI 📈
 
-![version](https://img.shields.io/badge/version-1.3.3-blue)
+![version](https://img.shields.io/badge/version-1.3.4-blue)
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com)
@@ -27,16 +27,11 @@ The project was created as a unified interface for the Telegram bot [@InvestingA
 ## [📦 Full Changelog](docs/ChangeLog.md)
 
 
-### 🆕 v1.3.3
+### 🆕 v1.3.4
 
-#### ✨ New Features:
-* **`GET /search`** — autocomplete-style asset lookup by ticker, symbol, or name fragment. Query params: `q` (required), optional `type` (`stock` | `crypto` | `steam`), `limit` (default 20, max 50). Results are scored and sorted by relevance (prefix on ticker/symbol first, then substring in names). No Redis — in-memory search over static catalogs.
-* **Search response models** in `app/schemas/search_responses.py` — discriminated hits: `StockSearchHit`, `CryptoSearchHit` (`name`, `symbol`, `full_name`), `SteamSearchHit` (`name`, `class_id`).
-* **Asset catalogs** for search:
-  - `STOCK_TICKERS` — `app/types/constants/stock_tickers.py` (ticker → company name)
-  - `STEAM_NAMES` — `app/types/constants/steam_names.py` (CS2 & TF2 market hash names)
-  - `CRYPTO_COINS` — existing registry, also used by search
-* **`app/services/asset_search.py`** and tests in `tests/test_asset_search.py`.
+#### 🐛 Bug Fixes:
+* Remove steam browser headers from history endpoint. Earlier this caused `404` for all steam items.
+---
 
 ## Installation 🛠️
 

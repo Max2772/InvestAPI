@@ -1,5 +1,10 @@
 ## 📦 Full Changelog
+---
 
+### 🆕 v1.3.4
+
+#### 🐛 Bug Fixes:
+* Remove steam browser headers from history endpoint. Earlier this caused `404` for all steam items.
 ---
 
 ### 🆕 v1.3.3
